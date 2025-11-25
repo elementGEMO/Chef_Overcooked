@@ -3,6 +3,7 @@ using R2API;
 using RoR2;
 using RoR2.Skills;
 using RoR2BepInExPack.GameAssetPathsBetter;
+using ShaderSwapper;
 using System.IO;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
@@ -12,6 +13,9 @@ using UnityEngine.Networking;
 
 namespace ChefOvercooked
 {
+    [BepInDependency(ItemAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(DamageAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(PrefabAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(LanguageAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
 
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
@@ -36,50 +40,14 @@ namespace ChefOvercooked
             if (PluginConfig.Enable_Logging.Value) Log.Init(Logger);
 
             Cook.Instantiate();
-            //CreateVisuals();
+            new MonsterMeatItem();
+            new MeatTimerBuff();
+
+            new CookDamageType();
+            new CookingBuff();
+            new CookedBuff();
+
             CreateContent();
-
-            // Add Execute via HealthComponent.TakeDamageProcess [executeEliteHealthFraction]
-        }
-        private void CreateVisuals()
-        {
-            //RoR2/DLC2/Chef/BoostedRolyPolyProjectile.prefab
-            //ReturnsCook.SpinProjectile = Addressables.LoadAssetAsync<GameObject>(RoR2_DLC2_Chef.BoostedRolyPolyProjectile_prefab).WaitForCompletion();
-            // RoR2/Base/Saw/OmniImpactVFXSawmerang.prefab
-
-            /*
-            GameObject tempImpact   = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_Saw.OmniImpactVFXSawmerang_prefab).WaitForCompletion().InstantiateClone("CookImpact");
-            EffectComponent effect  = tempImpact.GetComponent<EffectComponent>();
-            tempImpact.AddComponent<NetworkIdentity>();
-
-            ReturnsCook.ImpactSlice = new()
-            {
-                prefab = tempImpact,
-                _prefab = tempImpact,
-                prefabName = "CookImpact",
-                prefabEffectComponent = effect
-            };
-
-            ContentAddition.AddEffect(ReturnsCook.ImpactSlice.prefab);
-            */
-
-            //GameObject sawImpact = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_Saw.OmniImpactVFXSawmerang_prefab).WaitForCompletion();
-            /*
-            On.RoR2.EffectCatalog.Init += (orig) =>
-            {
-                //ImpactSlice = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_Saw.OmniImpactVFXSawmerang_prefab).WaitForCompletion();
-                //ReturnsCook.SawIndex = EffectCatalog.FindEffectIndexFromPrefab(sawImpact);
-
-                Log.Warning("Prefab Name: " + sawImpact.name);
-                Log.Warning("Prefab Effect Index: " + (int)ReturnsCook.SawIndex);
-            };
-            */
-            //ReturnsCook.SawIndex = sawImpact.GetComponent<EffectComponent>().effectIndex;
-            //ReturnsCook.SawIndex = EffectCatalog.FindEffectIndexFromPrefab(sawImpact);
-            //EffectCatalog.
-
-            //ReturnsCook.ImpactSlice = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_Saw.OmniImpactVFXSawmerang_prefab).WaitForCompletion().GetComponent<EffectComponent>();
-
         }
         private void CreateContent()
         {
@@ -87,6 +55,7 @@ namespace ChefOvercooked
             Sprite skillIcon        = Bundle.LoadAsset<Sprite>("TemporarySkillIcon");
 
             ContentAddition.AddEntityState(typeof(Cook), out _);
+            ContentAddition.AddEntityState(typeof(CookingState), out _);
 
             chefCookSkill.skillName = "ChefReturnsCook";
             chefCookSkill.skillNameToken = TokenPrefix + "COOK_SKILL";
@@ -110,7 +79,7 @@ namespace ChefOvercooked
             chefCookSkill.forceSprintDuringState = false;
             chefCookSkill.canceledFromSprinting = false;
 
-            chefCookSkill.beginSkillCooldownOnSkillEnd = false;
+            chefCookSkill.beginSkillCooldownOnSkillEnd = true;
 
             ContentAddition.AddSkillDef(chefCookSkill);
 
@@ -125,6 +94,7 @@ namespace ChefOvercooked
         private void SetUpAssets()
         {
             Bundle = AssetBundle.LoadFromFile(System.IO.Path.Combine(Directory.GetParent(Info.Location)!.ToString(), "chefovercooked"));
+            StartCoroutine(Bundle.UpgradeStubbedShadersAsync());
         }
     }
 }

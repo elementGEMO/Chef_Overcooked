@@ -24,11 +24,10 @@ namespace ChefOvercooked
         private EffectComponent sliceImpact;
         private float setDuration;
         private int attackCount;
+        private bool isCrit;
 
         public static void Instantiate()
         {
-            //SpinEffect = Addressables.LoadAssetAsync<GameObject>(RoR2_DLC2_Chef.BoostedRolyPolyProjectile_prefab).WaitForCompletion();
-
             GameObject spinPrefab = Addressables.LoadAssetAsync<GameObject>(RoR2_DLC2_Chef.BoostedRolyPolyGhost_prefab).WaitForCompletion().InstantiateClone("CookSpinEffect");
             EffectComponent spinEffect = spinPrefab.AddComponent<EffectComponent>();
             DestroyOnTimer spinTimer = spinPrefab.GetComponent<DestroyOnTimer>();
@@ -40,6 +39,8 @@ namespace ChefOvercooked
             spinPrefab.AddComponent<VFXAttributes>();
             UnityEngine.Object.Destroy(spinPrefab.GetComponent<ProjectileGhostController>());
 
+            foreach (Transform scale in spinPrefab.GetComponentInChildren<Transform>()) scale.localScale *= (float) Math.Sqrt(Radius * 0.75f);
+
             SpinEffect = new()
             {
                 prefab = spinPrefab,
@@ -50,7 +51,7 @@ namespace ChefOvercooked
             //
 
             GameObject slicePrefab      = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_Saw.OmniImpactVFXSawmerang_prefab).WaitForCompletion().InstantiateClone("CookSliceImpact");
-            EffectComponent sliceEffect = slicePrefab.AddComponent<EffectComponent>();
+            EffectComponent sliceEffect = slicePrefab.GetComponent<EffectComponent>();
 
             UnityEngine.Object.Destroy(slicePrefab.transform.Find("Scaled Hitspark 4, Directional (Random Color)").gameObject);
             UnityEngine.Object.Destroy(slicePrefab.transform.Find("Scaled Hitspark 3, Radial (Random Color)").gameObject);
@@ -73,6 +74,7 @@ namespace ChefOvercooked
         {
             base.OnEnter();
 
+            isCrit = Util.CheckRoll(critStat, characterBody.master);
             chefControl = characterBody.GetComponent<ChefController>();
             sliceImpact = SliceEffect.prefab.GetComponent<EffectComponent>();
             setDuration = BaseAttackRate;
@@ -82,6 +84,8 @@ namespace ChefOvercooked
             PlayAnimation("Body", "BoostedRolyPoly", "FireRolyPoly.playbackRate", BaseAttackRate * 2, 0f);
             GetModelAnimator().SetBool("isInBoostedRolyPoly", true);
 
+            if (NetworkServer.active) characterBody.AddBuff(CookingBuff.BuffDef);
+
             Util.PlaySound("Play_chef_skill3_boosted_active_loop", gameObject);
         }
         public override void OnExit()
@@ -89,6 +93,8 @@ namespace ChefOvercooked
             GetModelAnimator().SetBool("isInBoostedRolyPoly", false);
             PlayCrossfade("Body", "ExitRolyPoly", 0.1f);
             chefControl.blockOtherSkills = false;
+
+            if (NetworkServer.active) characterBody.RemoveBuff(CookingBuff.BuffDef);
 
             Util.PlaySound("Stop_chef_skill3_boosted_active_loop", gameObject);
 
@@ -104,11 +110,13 @@ namespace ChefOvercooked
             {
                 setDuration = BaseAttackRate;
                 attackCount += 1;
-
                 AreaSlash();
             }
 
-            if (attackCount > AttackInstances && isAuthority) outer.SetNextStateToMain();
+            if (attackCount > AttackInstances && isAuthority)
+            {
+                outer.SetNextStateToMain();
+            }
         }
 
         private void AreaSlash()
@@ -133,12 +141,13 @@ namespace ChefOvercooked
                 baseDamage = damageStat * DamageCoefficient,
                 damageColorIndex = DamageColorIndex.Default,
                 damageType = new DamageTypeCombo(DamageType.Stun1s, DamageTypeExtended.ChefSource, DamageSource.Special),
-                crit = Util.CheckRoll(critStat, characterBody.master),
+                crit = isCrit,
                 falloffModel = BlastAttack.FalloffModel.None,
                 impactEffect = sliceImpact.effectIndex,
                 procCoefficient = 1
             };
 
+            DamageAPI.AddModdedDamageType(areaSlash, CookDamageType.DamageType);
             areaSlash.Fire();
         }
         public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Frozen;

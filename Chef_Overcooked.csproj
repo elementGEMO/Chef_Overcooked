@@ -13,6 +13,7 @@
     </PackageReference>
     <PackageReference Include="BepInEx.Core" Version="5.4.21" />
     <PackageReference Include="MMHOOK.RoR2" Version="2025.11.19" NoWarn="NU1701" />
+    <PackageReference Include="R2API.DamageType" Version="1.1.7" />
     <PackageReference Include="R2API.Items" Version="1.0.7" />
     <PackageReference Include="R2API.Language" Version="1.0.1" />
     <PackageReference Include="R2API.Networking" Version="1.0.4" />
@@ -22,5 +23,16 @@
     <PackageReference Include="RiskOfRain2.GameLibs" Version="1.4.0-r.0" />
     <PackageReference Include="RoR2BepInExPack" Version="1.36.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ShaderSwapper">
+      <HintPath>..\Libraries\ShaderSwapper.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <NoWarn>$(NoWarn);CS0618</NoWarn>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+  </PropertyGroup>
 
 </Project>
