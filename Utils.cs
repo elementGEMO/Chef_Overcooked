@@ -15,6 +15,25 @@ internal static class HelperLanguage
     }
 }
 
+internal static class HelperFontColor
+{
+    public static string Style(this string self, FontColor style) => "<style=" + style + ">" + self + "</style>";
+    public static string Style(this string self, string color) => "<color=" + color + ">" + self + "</color>";
+    public enum FontColor
+    {
+        cStack,
+        cIsDamage,
+        cIsHealth,
+        cIsUtility,
+        cIsHealing,
+        cDeath,
+        cSub,
+        cKeywordName,
+        cIsVoid,
+        cIsLunar
+    };
+}
+
 internal class HelperRender
 {
     public static CharacterModel.RendererInfo[] ItemDisplaySetup(GameObject self)
@@ -72,24 +91,7 @@ internal static class SAUtils
     public static string OptText(this string self, string opt, bool value) => value ? self : opt;
     public static string FuseText(List<string> allStrings) => string.Join("", allStrings);
 }
-internal static class SAColors
-{
-    public static string Style(this string self, FontColor style) => "<style=" + style + ">" + self + "</style>";
-    public static string Style(this string self, string color) => "<color=" + color + ">" + self + "</color>";
-    public enum FontColor
-    {
-        cStack,
-        cIsDamage,
-        cIsHealth,
-        cIsUtility,
-        cIsHealing,
-        cDeath,
-        cSub,
-        cKeywordName,
-        cIsVoid,
-        cIsLunar
-    };
-}
+
 
 internal class SAOverlay
 {

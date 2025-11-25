@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Text;
 using R2API;
 using RoR2;
+using RoR2.Skills;
+using RoR2.UI;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
 using RoR2.Orbs;
@@ -20,11 +22,13 @@ public class CookDamageType
     {
         DamageType = DamageAPI.ReserveDamageType();
         IL.RoR2.ItemDef.AttemptGrant += ItemDef_AttemptGrant;
+        IL.RoR2.UI.HealthBar.UpdateBarInfos += HealthBar_UpdateBarInfos;
         IL.RoR2.HealthComponent.TakeDamageProcess += HealthComponent_TakeDamageProcess;
         GlobalEventManager.onCharacterDeathGlobal += GlobalEventManager_onCharacterDeathGlobal;
 
         MeatOrb.CreatePrefab();
     }
+
     private void ItemDef_AttemptGrant(ILContext il)
     {
         ILCursor cursor = new(il);
@@ -102,6 +106,57 @@ public class CookDamageType
             }
         }
     }
+    private void HealthBar_UpdateBarInfos(ILContext il)
+    {
+        ILCursor cursor = new(il);
+        int cullIndex = -1;
+
+        if (cursor.TryGotoNext(
+            x => x.MatchLdloc(out _),
+            x => x.MatchLdfld(typeof(HealthComponent.HealthBarValues), nameof(HealthComponent.HealthBarValues.cullFraction)),
+            x => x.MatchStloc(out cullIndex)
+        ) && cullIndex != -1)
+        {
+            if (cursor.TryGotoNext(
+                x => x.MatchLdarg(0),
+                x => x.MatchLdflda(typeof(HealthBar), nameof(HealthBar.barInfoCollection)),
+                x => x.MatchLdflda(typeof(HealthBar.BarInfoCollection), nameof(HealthBar.BarInfoCollection.cullBarInfo))
+            ))
+            {
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Ldloc, cullIndex);
+
+                cursor.EmitDelegate<Func<HealthBar, float, float>>((self, cull) =>
+                {
+                    CharacterBody victimBody = self.source ? self.source.body : null;
+                    CharacterBody viewerBody = self.viewerBody;
+
+                    if (victimBody != null && viewerBody != null)
+                    {
+                        bool executeImmune = (victimBody.bodyFlags & CharacterBody.BodyFlags.ImmuneToExecutes) > CharacterBody.BodyFlags.None;
+                        bool isViewerChef = viewerBody.GetComponent<ChefController>();
+
+                        if (!executeImmune && isViewerChef)
+                        {
+                            SkillDef selectSpecial = viewerBody.skillLocator?.special?.skillDef;
+                            bool hasCookAbility = selectSpecial ? selectSpecial == SpecialCookSkill.SkillDef : false;
+
+                            Log.Error(selectSpecial.skillName);
+                            Log.Error(SpecialCookSkill.SkillDef.skillName);
+
+                            if (hasCookAbility) cull = Math.Max(cull, 0.1f);
+                        }
+                    }
+
+                    return cull;
+                });
+
+                cursor.Emit(OpCodes.Stloc, cullIndex);
+            }
+            else Log.Error("COOKDAMAGETYPE_UPDATEBARINFOS failed to ILHook #2");
+        }
+        else Log.Error("COOKDAMAGETYPE_UPDATEBARINFOS failed to ILHook #1");
+    }
     private void HealthComponent_TakeDamageProcess(ILContext il)
     {
         ILCursor cursor = new(il);
@@ -163,6 +218,7 @@ public class CookDamageType
             }
         }
     }
+
     public class MeatOrb : ItemTransferOrb
     {
         private static GameObject MeatEffect;
@@ -175,7 +231,7 @@ public class CookDamageType
             GameObject meatCube     = UnityEngine.Object.Instantiate(ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("monsterMeatModel"), MeatEffect.transform);
             GameObject actualMesh   = meatCube.transform.Find("mdlMeat").gameObject;
 
-            actualMesh.transform.localScale *= 0.35f;
+            actualMesh.transform.localScale *= 0.3f;
             actualMesh.AddComponent<MeatSpin>();
 
             MeatEffect.transform.Find("BillboardBase").gameObject.SetActive(false);
@@ -204,7 +260,6 @@ public class CookDamageType
             }
         }
     }
-
     public class MeatSpin : MonoBehaviour
     {
         private Vector3 randomAxis;

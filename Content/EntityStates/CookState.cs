@@ -10,7 +10,7 @@ using RoR2BepInExPack.GameAssetPathsBetter;
 
 namespace ChefOvercooked
 {
-    public class Cook : GenericCharacterMain
+    public class CookState : GenericCharacterMain
     {
         private static EffectDef SpinEffect;
         private static EffectDef SliceEffect;
@@ -25,12 +25,12 @@ namespace ChefOvercooked
         private float setDuration;
         private int attackCount;
         private bool isCrit;
-
-        public static void Instantiate()
+        
+        public CookState()
         {
-            GameObject spinPrefab = Addressables.LoadAssetAsync<GameObject>(RoR2_DLC2_Chef.BoostedRolyPolyGhost_prefab).WaitForCompletion().InstantiateClone("CookSpinEffect");
-            EffectComponent spinEffect = spinPrefab.AddComponent<EffectComponent>();
-            DestroyOnTimer spinTimer = spinPrefab.GetComponent<DestroyOnTimer>();
+            GameObject spinPrefab       = Addressables.LoadAssetAsync<GameObject>(RoR2_DLC2_Chef.BoostedRolyPolyGhost_prefab).WaitForCompletion().InstantiateClone("CookSpinEffect");
+            EffectComponent spinEffect  = spinPrefab.AddComponent<EffectComponent>();
+            DestroyOnTimer spinTimer    = spinPrefab.GetComponent<DestroyOnTimer>();
 
             spinTimer.enabled = true;
             spinTimer.duration = BaseAttackRate * 5;
@@ -39,7 +39,7 @@ namespace ChefOvercooked
             spinPrefab.AddComponent<VFXAttributes>();
             UnityEngine.Object.Destroy(spinPrefab.GetComponent<ProjectileGhostController>());
 
-            foreach (Transform scale in spinPrefab.GetComponentInChildren<Transform>()) scale.localScale *= (float) Math.Sqrt(Radius * 0.75f);
+            foreach (Transform scale in spinPrefab.GetComponentInChildren<Transform>()) scale.localScale *= (float)Math.Sqrt(Radius * 0.75f);
 
             SpinEffect = new()
             {
@@ -47,8 +47,6 @@ namespace ChefOvercooked
                 prefabName = "CookSpinEffect",
                 prefabEffectComponent = spinEffect
             };
-
-            //
 
             GameObject slicePrefab      = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_Saw.OmniImpactVFXSawmerang_prefab).WaitForCompletion().InstantiateClone("CookSliceImpact");
             EffectComponent sliceEffect = slicePrefab.GetComponent<EffectComponent>();
@@ -64,12 +62,9 @@ namespace ChefOvercooked
                 prefabEffectComponent = sliceEffect
             };
 
-            //
-
             ContentAddition.AddEffect(SpinEffect.prefab);
             ContentAddition.AddEffect(SliceEffect.prefab);
         }
-
         public override void OnEnter()
         {
             base.OnEnter();

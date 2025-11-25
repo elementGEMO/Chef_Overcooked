@@ -1,13 +1,8 @@
-﻿using BepInEx;
-using R2API;
-using RoR2;
-using RoR2.Skills;
-using RoR2BepInExPack.GameAssetPathsBetter;
-using ShaderSwapper;
+﻿using R2API;
+using BepInEx;
 using System.IO;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
-using UnityEngine.Networking;
+using ShaderSwapper;
 
 [assembly: HG.Reflection.SearchableAttribute.OptIn]
 
@@ -39,7 +34,12 @@ namespace ChefOvercooked
             PluginConfig.Init();
             if (PluginConfig.Enable_Logging.Value) Log.Init(Logger);
 
-            Cook.Instantiate();
+            CreateContent();
+        }
+
+        public void CreateContent()
+        {
+            //new CookState();
             new MonsterMeatItem();
             new MeatTimerBuff();
 
@@ -47,48 +47,7 @@ namespace ChefOvercooked
             new CookingBuff();
             new CookedBuff();
 
-            CreateContent();
-        }
-        private void CreateContent()
-        {
-            SkillDef chefCookSkill  = ScriptableObject.CreateInstance<SkillDef>();
-            Sprite skillIcon        = Bundle.LoadAsset<Sprite>("TemporarySkillIcon");
-
-            ContentAddition.AddEntityState(typeof(Cook), out _);
-            ContentAddition.AddEntityState(typeof(CookingState), out _);
-
-            chefCookSkill.skillName = "ChefReturnsCook";
-            chefCookSkill.skillNameToken = TokenPrefix + "COOK_SKILL";
-            chefCookSkill.skillDescriptionToken = TokenPrefix + "COOK_SKILL_DESC";
-
-            chefCookSkill.icon = skillIcon;
-
-            chefCookSkill.activationStateMachineName = "Weapon";
-            chefCookSkill.activationState = new(typeof(Cook));
-            chefCookSkill.isCombatSkill = true;
-            chefCookSkill.interruptPriority = EntityStates.InterruptPriority.Frozen;
-
-            chefCookSkill.baseRechargeInterval = 10;
-            chefCookSkill.baseMaxStock = 1;
-            chefCookSkill.rechargeStock = 1;
-            chefCookSkill.requiredStock = 1;
-            chefCookSkill.stockToConsume = 1;
-            chefCookSkill.mustKeyPress = true;
-
-            chefCookSkill.cancelSprintingOnActivation = true;
-            chefCookSkill.forceSprintDuringState = false;
-            chefCookSkill.canceledFromSprinting = false;
-
-            chefCookSkill.beginSkillCooldownOnSkillEnd = true;
-
-            ContentAddition.AddSkillDef(chefCookSkill);
-
-            SkillFamily chefSpecialFamily = Addressables.LoadAssetAsync<SkillFamily>(RoR2_DLC2_Chef.ChefSpecialFamily_asset).WaitForCompletion();
-
-            HG.ArrayUtils.ArrayAppend(ref chefSpecialFamily.variants, new SkillFamily.Variant { skillDef = chefCookSkill });
-
-            LanguageAPI.Add(TokenPrefix + "COOK_SKILL", "Cook");
-            LanguageAPI.Add(TokenPrefix + "COOK_SKILL_DESC", "Rapidly prepare meal out of customers, stunning and dealing 6x50% damage. Slain enemies become tasty temporary meal items. Cannot critical hit. Executes enemies below 10% health.");
+            new SpecialCookSkill();
         }
 
         private void SetUpAssets()

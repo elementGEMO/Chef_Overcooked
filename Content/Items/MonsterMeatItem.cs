@@ -28,8 +28,6 @@ public class MonsterMeatItem : ItemBase
 
     protected override string DisplayName => "Monster Meat";
 
-    //protected override bool IsEnabled()
-
     protected override void Initialize() => ItemDef = Value;
     protected override void LogDisplay()
     {

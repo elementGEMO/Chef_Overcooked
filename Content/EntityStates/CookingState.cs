@@ -13,7 +13,6 @@ namespace ChefOvercooked
 
         private bool hasPlayedSound;
         private bool hasPlayedAnim;
-        //private float delayTime;
 
         [SystemInitializer(typeof(ItemCatalog))]
         private static void CompileFood()
