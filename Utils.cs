@@ -34,7 +34,7 @@ internal static class HelperFontColor
     };
 }
 
-internal class HelperRender
+internal static class HelperRender
 {
     public static CharacterModel.RendererInfo[] ItemDisplaySetup(GameObject self)
     {
@@ -80,9 +80,21 @@ public struct CombinedItemTier
         };
     }
 }
+internal static class SoundHelper
+{
+    public static NetworkSoundEventDef CreateNetworkSoundDef(string soundName)
+    {
+        NetworkSoundEventDef soundDef = ScriptableObject.CreateInstance<NetworkSoundEventDef>();
 
-/*
-internal static class SAUtils
+        soundDef.eventName = soundName;
+        soundDef.name = soundName;
+
+        ContentAddition.AddNetworkSoundEventDef(soundDef);
+
+        return soundDef;
+    }
+}
+internal static class StringHelper
 {
     public static string SignVal(this float value) => value >= 0f ? "+" + value : "" + value;
     public static string SignVal(this int value) => value >= 0 ? "+" + value : "" + value;
@@ -92,7 +104,7 @@ internal static class SAUtils
     public static string FuseText(List<string> allStrings) => string.Join("", allStrings);
 }
 
-
+/*
 internal class SAOverlay
 {
     public static void AddOverlay(CharacterModel model, Material overlayMaterial)
@@ -103,19 +115,6 @@ internal class SAOverlay
         int overlayCount = model.activeOverlayCount;
         model.activeOverlayCount = overlayCount + 1;
         allOverlays[overlayCount] = overlayMaterial;
-    }
-}
-
-internal class SASounds() {
-    public static NetworkSoundEventDef CreateNetworkSoundDef(string soundName) {
-        NetworkSoundEventDef soundDef = ScriptableObject.CreateInstance<NetworkSoundEventDef>();
-
-        soundDef.eventName = soundName;
-        soundDef.name = soundName;
-
-        ContentAddition.AddNetworkSoundEventDef(soundDef);
-
-        return soundDef;
     }
 }
 */

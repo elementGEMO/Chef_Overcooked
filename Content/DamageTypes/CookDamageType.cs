@@ -1,16 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using R2API;
 using RoR2;
-using RoR2.Skills;
 using RoR2.UI;
+using RoR2.Orbs;
+using RoR2.Skills;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
-using RoR2.Orbs;
-using RoR2BepInExPack.GameAssetPathsBetter;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using RoR2BepInExPack.GameAssetPathsBetter;
 
 namespace ChefOvercooked;
 
@@ -25,6 +23,7 @@ public class CookDamageType
         IL.RoR2.UI.HealthBar.UpdateBarInfos += HealthBar_UpdateBarInfos;
         IL.RoR2.HealthComponent.TakeDamageProcess += HealthComponent_TakeDamageProcess;
         GlobalEventManager.onCharacterDeathGlobal += GlobalEventManager_onCharacterDeathGlobal;
+        GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
 
         MeatOrb.CreatePrefab();
     }
@@ -123,6 +122,8 @@ public class CookDamageType
                 x => x.MatchLdflda(typeof(HealthBar.BarInfoCollection), nameof(HealthBar.BarInfoCollection.cullBarInfo))
             ))
             {
+                cursor.MoveAfterLabels();
+
                 cursor.Emit(OpCodes.Ldarg_0);
                 cursor.Emit(OpCodes.Ldloc, cullIndex);
 
@@ -140,9 +141,6 @@ public class CookDamageType
                         {
                             SkillDef selectSpecial = viewerBody.skillLocator?.special?.skillDef;
                             bool hasCookAbility = selectSpecial ? selectSpecial == SpecialCookSkill.SkillDef : false;
-
-                            Log.Error(selectSpecial.skillName);
-                            Log.Error(SpecialCookSkill.SkillDef.skillName);
 
                             if (hasCookAbility) cull = Math.Max(cull, 0.1f);
                         }
@@ -185,7 +183,7 @@ public class CookDamageType
 
                 cursor.EmitDelegate<Func<HealthComponent, DamageInfo, float, float>>((self, damageInfo, damagePercent) =>
                 {
-                    if (DamageAPI.HasModdedDamageType(damageInfo, DamageType) && damagePercent < 0.1f) damagePercent = 0.1f;
+                    if (DamageAPI.HasModdedDamageType(damageInfo, DamageType) && damagePercent <= 0.1f) damagePercent = 0.1f;
                     return damagePercent;
                 });
 
@@ -203,8 +201,13 @@ public class CookDamageType
 
         if (attackerBody != null && victimBody != null && damageInfo != null)
         {
-            if (DamageAPI.HasModdedDamageType(report.damageInfo, DamageType))
+            bool hasDamage      = DamageAPI.HasModdedDamageType(report.damageInfo, DamageType);
+            bool hasComponent   = victimBody.GetComponent<MeatTolerance>();
+
+            if (hasDamage || hasComponent)
             {
+                attackerBody = hasComponent ? victimBody.GetComponent<MeatTolerance>().GetAttacker() : attackerBody;
+
                 MeatOrb itemOrb = new()
                 {
                     stack = 1,
@@ -218,7 +221,39 @@ public class CookDamageType
             }
         }
     }
+    private void GlobalEventManager_onServerDamageDealt(DamageReport report)
+    {
+        CharacterBody attackerBody = report.attackerBody;
+        CharacterBody victimBody = report.victimBody;
+        DamageInfo damageInfo = report.damageInfo;
 
+        if (attackerBody != null && victimBody != null && damageInfo != null)
+        {
+            if (DamageAPI.HasModdedDamageType(report.damageInfo, DamageType))
+            {
+                MeatTolerance meatComponent = victimBody.GetComponent<MeatTolerance>() ?? victimBody.gameObject.AddComponent<MeatTolerance>();
+                meatComponent?.SetAttacker(attackerBody);
+            }
+        }
+    }
+
+    public class MeatTolerance : MonoBehaviour
+    {
+        private CharacterBody LastAttacker;
+        private float Duration;
+        public CharacterBody GetAttacker() => LastAttacker;
+        public void SetAttacker(CharacterBody attacker)
+        {
+            LastAttacker = attacker;
+            Duration = 1f;
+        }
+        public void Awake() => Duration = 1f;
+        public void FixedUpdate()
+        {
+            Duration -= Time.fixedDeltaTime;
+            if (Duration < 0f) Destroy(this);
+        }
+    }
     public class MeatOrb : ItemTransferOrb
     {
         private static GameObject MeatEffect;
@@ -253,10 +288,11 @@ public class CookDamageType
 
             if (chefBody)
             {
+                EffectManager.SimpleSoundEffect(AllSounds.Play_Meat_Pickup.index, chefBody.corePosition, true);
                 UserProfile userProfile = chefBody.master?.playerCharacterMasterController?.networkUser?.localUser?.userProfile;
-                Util.PlaySound("Play_UI_item_pickup", chefBody.gameObject);
+                userProfile?.DiscoverPickup(PickupCatalog.FindPickupIndex(MonsterMeatItem.ItemDef.itemIndex));
+
                 chefBody.AddTimedBuff(MeatTimerBuff.BuffDef, 1f);
-                if (userProfile != null) userProfile.DiscoverPickup(PickupCatalog.FindPickupIndex(MonsterMeatItem.ItemDef.itemIndex));
             }
         }
     }
@@ -265,13 +301,13 @@ public class CookDamageType
         private Vector3 randomAxis;
         private float randomSpeed;
 
-        private void Awake()
+        public void Awake()
         {
             randomAxis = UnityEngine.Random.onUnitSphere;
             randomSpeed = UnityEngine.Random.Range(200f, 360f);
         }
 
-        private void Update()
+        public void FixedUpdate()
         {
             transform.Rotate(randomAxis * randomSpeed * Time.fixedDeltaTime, Space.Self);
         }

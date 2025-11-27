@@ -1,16 +1,9 @@
 ﻿using RoR2.Skills;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine.AddressableAssets;
 using UnityEngine;
 using RoR2BepInExPack.GameAssetPathsBetter;
 using R2API;
-using RoR2;
-using BepInEx;
-using EntityStates.Chef;
 using EntityStates;
-using MonoMod.RuntimeDetour;
 
 namespace ChefOvercooked;
 using static HelperFontColor;
@@ -22,7 +15,7 @@ public class SpecialCookSkill : SkillBase
 
     protected override string DisplaySkillName  => "Cook";
     protected override string SkillDescription => string.Format(
-        "Cleave".Style(FontColor.cIsDamage) + ". " + "Stunning".Style(FontColor.cIsDamage) + ". Rapidly prepare a meal out of enemies for " + "6x80% ".Style(FontColor.cIsDamage) + "damage. Slain enemies become tasty " + "temporary meal items".Style(FontColor.cIsUtility) + "."
+        "Stunning".Style(FontColor.cIsDamage) + ". Rapidly " + "Cleave ".Style(FontColor.cIsDamage) + "enemies for " + "6x150% damage".Style(FontColor.cIsDamage) + ". Slain enemies become already discovered " + "temporary food items".Style(FontColor.cIsUtility) + "."
     );
 
     protected override Sprite SkillSprite       => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("TemporarySkillIcon");
@@ -48,8 +41,8 @@ public class SpecialCookSkill : SkillBase
         SkillDef = Value;
 
         SkillDef.keywordTokens = [
-            LanguageAdd(ChefOverCookedPlugin.TokenPrefix + "KEYWORD_CLEAVE", "Cleave".Style(FontColor.cKeywordName) + "Instantly kills enemies below ".Style(FontColor.cSub) + "10% health".Style(FontColor.cIsHealth) + ".".Style(FontColor.cSub)),
-            "KEYWORD_STUNNING"
+            "KEYWORD_STUNNING",
+            LanguageAdd(ChefOverCookedPlugin.TokenPrefix + "KEYWORD_CLEAVE", "Cleave".Style(FontColor.cKeywordName) + "Instantly kills enemies below ".Style(FontColor.cSub) + "10% health".Style(FontColor.cIsHealth) + ".".Style(FontColor.cSub))
         ];
 
         ContentAddition.AddEntityState(typeof(CookState), out _);

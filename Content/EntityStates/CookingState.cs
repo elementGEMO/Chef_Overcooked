@@ -2,117 +2,156 @@
 using RoR2;
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
-namespace ChefOvercooked
+namespace ChefOvercooked;
+public class CookingState : GenericCharacterMain
 {
-    public class CookingState : GenericCharacterMain
+    private static List<ItemDef> RunMealItemDefs;
+
+    private bool hasPlayedSound;
+    private bool hasPlayedAnim;
+
+    public static void CreateEffects()
     {
+        Run.onRunStartGlobal += Run_onRunStartGlobal;
+    }
 
-        private static List<ItemDef> FoodItems;
-        private static List<ItemDef> FoodItemsNoDLC;
+    private static void Run_onRunStartGlobal(Run instance)
+    {
+        bool isAlloyedEnabled   = instance.IsExpansionEnabled(ChefOverCookedPlugin.AlloyedCollective);
+        RunMealItemDefs         = [];
 
-        private bool hasPlayedSound;
-        private bool hasPlayedAnim;
-
-        [SystemInitializer(typeof(ItemCatalog))]
-        private static void CompileFood()
+        if (isAlloyedEnabled)
         {
-            FoodItems = [];
-
-            foreach (ItemDef item in ItemCatalog.allItemDefs)
+            foreach (ItemDef itemDef in ItemCatalog.allItemDefs)
             {
-                if (item != null && item.tier == ItemTier.FoodTier)
-                {
-                    if (item == MonsterMeatItem.ItemDef) continue;
-                    FoodItems.Add(item);
-                }
+                if (itemDef == null) continue;
+                if (itemDef.tier != ItemTier.FoodTier) continue;
+                if (itemDef == MonsterMeatItem.ItemDef) continue;
+                if (!instance.IsItemAvailable(itemDef.itemIndex)) continue;
+
+                RunMealItemDefs.Add(itemDef);
             }
         }
-        private UniquePickup GetRandomFood()
+        else
         {
-            int randomIndex = UnityEngine.Random.Range(0, FoodItems.Count);
-
-            UniquePickup tempPickup = new()
+            foreach (ItemIndex itemIndex in instance.availableItems)
             {
-                pickupIndex = PickupCatalog.FindPickupIndex(FoodItems[randomIndex].itemIndex),
-                decayValue = 1f / 4f
-            };
+                ItemDef itemDef = ItemCatalog.GetItemDef(itemIndex);
 
-            return tempPickup;
-        }
-        public override void OnEnter()
-        {
-            base.OnEnter();
+                if (itemDef == null) continue;
+                if (itemDef.tier != ItemTier.NoTier) continue;
+                if (!instance.IsItemAvailable(itemDef.itemIndex)) continue;
 
-            hasPlayedSound = false;
-            hasPlayedAnim = false;
+                RunMealItemDefs.Add(itemDef);
+            }
         }
-        public override void OnExit()
+    }
+    private PickupIndex RandomPickupIndex(CharacterMaster master = null)
+    {
+        if (master)
         {
-            Inventory inventory = characterBody.inventory;
-            int itemCount       = inventory.GetItemCountEffective(MonsterMeatItem.ItemDef);
+            using var _ = HG.ListPool<PickupIndex>.RentCollection(out List<PickupIndex> localMealItems);
+            UserProfile userProfile = master.playerCharacterMasterController?.networkUser?.localUser?.userProfile;
+
+            foreach (ItemDef itemDef in RunMealItemDefs)
+            {
+                PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(itemDef.itemIndex);
+                if (userProfile.HasDiscoveredPickup(pickupIndex)) localMealItems.Add(pickupIndex);
+            }
+
+            if (localMealItems.Count > 0)
+            {
+                return localMealItems[UnityEngine.Random.Range(0, localMealItems.Count)];
+            }
+            else
+            {
+                return PickupCatalog.FindPickupIndex(ItemCatalog.GetItemDef(RoR2Content.Items.ExtraLifeConsumed.itemIndex).itemIndex);
+            }
+        }
+        else
+        {
+            return PickupCatalog.FindPickupIndex(RunMealItemDefs[UnityEngine.Random.Range(0, RunMealItemDefs.Count)].itemIndex);
+        }
+    }
+
+    public override void OnEnter()
+    {
+        base.OnEnter();
+
+        hasPlayedSound = false;
+        hasPlayedAnim = false;
+    }
+    public override void OnExit()
+    {
+        Inventory inventory = characterBody.inventory;
+        int itemCount       = inventory.GetItemCountEffective(MonsterMeatItem.ItemDef);
+
+        if (characterBody.isPlayerControlled)
+        {
             Vector3 modelDirection = GetModelTransform().forward;
-            
 
             for (int i = 0; i < itemCount; i++)
             {
-                Vector3 vectorForce = modelDirection * ((i) + 10);
+                Vector3 vectorForce = modelDirection * (i + 10);
                 vectorForce = new(vectorForce.x, 12 + (i * 2), vectorForce.z);
 
-                PickupDropletController.CreatePickupDroplet(GetRandomFood(), characterBody.corePosition, vectorForce, false, false);
+                UniquePickup randomPickup = new()
+                {
+                    pickupIndex = RandomPickupIndex(characterBody.master),
+                    decayValue = 1f / 4f
+                };
+
+                PickupDropletController.CreatePickupDroplet(randomPickup, characterBody.corePosition, vectorForce, false, false);
             }
-
-            /*
-             * if (base.characterBody.isPlayerControlled)
-				{
-					PickupDropletController.CreatePickupDroplet(uniquePickup, vector2, vector, false, false);
-				}
-				else
-				{
-					PickupDef pickupDef = PickupCatalog.GetPickupDef(uniquePickup.pickupIndex);
-					ItemIndex itemIndex = pickupDef.itemIndex;
-					ScrapperController.CreateItemTakenOrb(vector2, base.gameObject, itemIndex);
-					base.characterBody.inventory.GiveItemTemp(itemIndex, 1f);
-					string baseToken = (base.teamComponent.teamIndex == TeamIndex.Player) ? "PLAYER_PICKUP" : "MONSTER_PICKUP";
-					Chat.SendBroadcastChat(new Chat.PlayerPickupChatMessage
-					{
-						subjectAsCharacterBody = base.characterBody,
-						baseToken = baseToken,
-						pickupToken = Language.GetStringFormatted("ITEM_MODIFIER_TEMP", new object[]
-						{
-							Language.GetStringFormatted(pickupDef.nameToken, Array.Empty<object>())
-						}),
-						pickupColor = pickupDef.baseColor,
-						pickupQuantity = 1U
-					});
-				}
-            */
-
-            inventory.RemoveItemPermanent(MonsterMeatItem.ItemDef, itemCount);
-
-            base.OnExit();
         }
-        public override void FixedUpdate()
+        else
         {
-            base.FixedUpdate();
-
-            if (!hasPlayedAnim)
+            string pickupToken  = (teamComponent.teamIndex == TeamIndex.Player) ? "PLAYER_PICKUP" : "MONSTER_PICKUP";
+            
+            for (int i = 0; i < itemCount; i++)
             {
-                PlayAnimation("Gesture, Override", "FireYesChef", "FireYesChef.playbackRate", 1f, 0f);
-                hasPlayedAnim = true;
-            }
+                PickupDef pickupDef = PickupCatalog.GetPickupDef(RandomPickupIndex());
+                ItemIndex itemIndex = pickupDef.itemIndex;
 
-            if (fixedAge >= 0.25 && !hasPlayedSound)
-            {
-                Util.PlaySound("Play_chef_skill4_boost_activate", gameObject);
-                hasPlayedSound = true;
-            }
+                characterBody.inventory.GiveItemTemp(itemIndex, 1f / 4f);
 
-            if (fixedAge >= 1.05 && isAuthority)
-            {
-                outer.SetNextStateToMain();
+                Chat.SendBroadcastChat(new Chat.PlayerPickupChatMessage
+                {
+                    subjectAsCharacterBody = characterBody,
+                    baseToken = pickupToken,
+                    pickupQuantity = 1U,
+                    pickupColor = pickupDef.baseColor,
+                    pickupToken = Language.GetStringFormatted("ITEM_MODIFIER_TEMP", [Language.GetStringFormatted(pickupDef.nameToken, [])])
+                });
             }
         }
-        public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Frozen;
+
+        inventory.RemoveItemPermanent(MonsterMeatItem.ItemDef, itemCount);
+
+        base.OnExit();
     }
+    public override void FixedUpdate()
+    {
+        base.FixedUpdate();
+
+        if (!hasPlayedAnim)
+        {
+            PlayAnimation("Gesture, Override", "FireYesChef", "FireYesChef.playbackRate", 1f, 0f);
+            hasPlayedAnim = true;
+        }
+
+        if (fixedAge >= 0.25 && !hasPlayedSound)
+        {
+            Util.PlaySound("Play_chef_skill4_boost_activate", gameObject);
+            hasPlayedSound = true;
+        }
+
+        if (fixedAge >= 1.05 && isAuthority)
+        {
+            outer.SetNextStateToMain();
+        }
+    }
+    public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Frozen;
 }

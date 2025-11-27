@@ -24,7 +24,7 @@ public class MeatTimerBuff : BuffBase
     {
         if (buffDef == BuffDef && self.GetComponent<ChefController>())
         {
-            EntityStateMachine.FindByCustomName(self.gameObject, "Body").SetNextState(new CookingState());
+            EntityStateMachine.FindByCustomName(self.gameObject, "Weapon").SetNextState(new CookingState());
         }
 
         orig(self, buffDef);

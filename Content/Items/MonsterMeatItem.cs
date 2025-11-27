@@ -6,7 +6,8 @@ using System.Text;
 using UnityEngine;
 
 namespace ChefOvercooked;
-
+using static StringHelper;
+using static HelperFontColor;
 public class MonsterMeatItem : ItemBase
 {
     protected override string Name => "MonsterMeat";
@@ -27,6 +28,15 @@ public class MonsterMeatItem : ItemBase
     protected override Sprite PickupIconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texMonsterMeatIcon");
 
     protected override string DisplayName => "Monster Meat";
+    protected override string PickupText => "Seemingly edible.";
+    protected override string Description => "Cooked into " + "temporary food items ".Style(FontColor.cIsUtility) + "by CHEF. Seemingly edible.";
+    protected override string Lore => FuseText([
+        "Sir, have you ever thought to wonder if these “meals” are even safe to consume?",
+        "\n\n",
+        "I'd hope so. It's the only food that we have left, and it seems good.. Plus, it's made by CHEF. Seems to have an infinite supply of materials wherever, whenever. Convenient when we need to stop and rest.",
+        "\n\n...\n\n",
+        "At least it tastes like chicken, most of the time."
+    ]);
 
     protected override void Initialize() => ItemDef = Value;
     protected override void LogDisplay()
@@ -38,9 +48,9 @@ public class MonsterMeatItem : ItemBase
 
         modelParam.focusPointTransform = foundMesh;
         modelParam.cameraPositionTransform = foundMesh;
-        modelParam.minDistance = 0.05f * 25f;
-        modelParam.maxDistance = 0.25f * 25f;
-        modelParam.modelRotation = new Quaternion(0.0115291597f, -0.587752283f, 0.0455321521f, -0.807676435f);
+        modelParam.minDistance = 2f;
+        modelParam.maxDistance = 7.5f;
+        modelParam.modelRotation = new Quaternion(0.9923118f, 0.0551284f, -0.1102569f, 0.0110257f);
     }
     protected override ItemDisplayRuleDict ItemDisplay()
     {

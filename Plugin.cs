@@ -3,6 +3,9 @@ using BepInEx;
 using System.IO;
 using UnityEngine;
 using ShaderSwapper;
+using RoR2.ExpansionManagement;
+using RoR2BepInExPack.GameAssetPaths.Version_1_35_0;
+using UnityEngine.AddressableAssets;
 
 [assembly: HG.Reflection.SearchableAttribute.OptIn]
 
@@ -21,6 +24,7 @@ namespace ChefOvercooked
         public const string PluginName = "Chef_Overcooked";
         public const string PluginVersion = "1.0.0";
 
+        public static ExpansionDef AlloyedCollective { get; private set; }
         public static ChefOverCookedPlugin Instance { get; private set; }
         public static AssetBundle Bundle { get; private set; }
 
@@ -28,7 +32,6 @@ namespace ChefOvercooked
 
         public void Awake()
         {
-            Instance = this;
             SetUpAssets();
 
             PluginConfig.Init();
@@ -39,7 +42,8 @@ namespace ChefOvercooked
 
         public void CreateContent()
         {
-            //new CookState();
+            new AllSounds();
+
             new MonsterMeatItem();
             new MeatTimerBuff();
 
@@ -47,12 +51,17 @@ namespace ChefOvercooked
             new CookingBuff();
             new CookedBuff();
 
+            CookState.CreateEffects();
+            CookingState.CreateEffects();
+
             new SpecialCookSkill();
         }
 
         private void SetUpAssets()
         {
-            Bundle = AssetBundle.LoadFromFile(System.IO.Path.Combine(Directory.GetParent(Info.Location)!.ToString(), "chefovercooked"));
+            Instance = this;
+            AlloyedCollective = Addressables.LoadAssetAsync<ExpansionDef>(RoR2_DLC3.DLC3_asset).WaitForCompletion();
+            Bundle = AssetBundle.LoadFromFile(Path.Combine(Directory.GetParent(Info.Location)!.ToString(), "chefovercooked"));
             StartCoroutine(Bundle.UpgradeStubbedShadersAsync());
         }
     }
