@@ -1,11 +1,11 @@
 ﻿using System;
-using EntityStates;
 using R2API;
 using RoR2;
 using RoR2.Projectile;
+using EntityStates;
 using UnityEngine;
-using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
+using UnityEngine.AddressableAssets;
 using RoR2BepInExPack.GameAssetPathsBetter;
 
 namespace ChefOvercooked;
@@ -13,11 +13,6 @@ public class CookState : GenericCharacterMain
 {
     private static EffectDef SpinEffect;
     private static EffectDef SliceEffect;
-
-    private static readonly int AttackInstances = 6;
-    private static readonly float DamageCoefficient = 1.5f;
-    private static readonly float BaseAttackRate = 0.125f;
-    private static readonly float Radius = 7.5f;
 
     private ChefController chefControl;
     private EffectComponent sliceImpact;
@@ -32,13 +27,16 @@ public class CookState : GenericCharacterMain
         DestroyOnTimer spinTimer = spinPrefab.GetComponent<DestroyOnTimer>();
 
         spinTimer.enabled = true;
-        spinTimer.duration = BaseAttackRate * 5;
+        spinTimer.duration = Math.Max(0.5f, PluginConfig.Attack_Rate.Value / PluginConfig.Attack_Instances.Value);
         spinEffect.parentToReferencedTransform = true;
         spinEffect.positionAtReferencedTransform = true;
         spinPrefab.AddComponent<VFXAttributes>();
         UnityEngine.Object.Destroy(spinPrefab.GetComponent<ProjectileGhostController>());
 
-        foreach (Transform scale in spinPrefab.GetComponentInChildren<Transform>()) scale.localScale *= (float)Math.Sqrt(Radius * 0.75f);
+        Vector3 spinSize    = Vector3.one * 0.75f * PluginConfig.Radius.Value / 2;
+        spinSize            = new Vector3(spinSize.x, spinSize.y, Mathf.Sqrt(spinSize.z));
+
+        foreach (Transform scale in spinPrefab.GetComponentInChildren<Transform>()) scale.localScale = spinSize;
 
         SpinEffect = new()
         {
@@ -54,6 +52,8 @@ public class CookState : GenericCharacterMain
         UnityEngine.Object.Destroy(slicePrefab.transform.Find("Scaled Hitspark 3, Radial (Random Color)").gameObject);
         UnityEngine.Object.Destroy(slicePrefab.transform.Find("Dash, Bright").gameObject);
 
+        //foreach (Transform scale in slicePrefab.GetComponentInChildren<Transform>()) scale.localScale *= 5;
+
         SliceEffect = new()
         {
             prefab = slicePrefab,
@@ -68,32 +68,19 @@ public class CookState : GenericCharacterMain
     {
         base.OnEnter();
 
-        isCrit = Util.CheckRoll(critStat, characterBody.master);
         chefControl = characterBody.GetComponent<ChefController>();
         sliceImpact = SliceEffect.prefab.GetComponent<EffectComponent>();
-        setDuration = BaseAttackRate;
+        isCrit = Util.CheckRoll(critStat, characterBody.master);
+
+        chefControl.blockOtherSkills = true;
+        setDuration = PluginConfig.Attack_Rate.Value / PluginConfig.Attack_Instances.Value;
         attackCount = 0;
 
-        //chefControl.blockOtherSkills = false;
-        PlayAnimation("Body", "BoostedRolyPoly", "FireRolyPoly.playbackRate", BaseAttackRate * 2, 0f);
+        Util.PlaySound("Play_chef_skill3_boosted_active_loop", gameObject);
+        PlayAnimation("Body", "BoostedRolyPoly", "FireRolyPoly.playbackRate", PluginConfig.Attack_Rate.Value, 0f);
         GetModelAnimator().SetBool("isInBoostedRolyPoly", true);
 
         if (NetworkServer.active) characterBody.AddBuff(CookingBuff.BuffDef);
-
-        Util.PlaySound("Play_chef_skill3_boosted_active_loop", gameObject);
-
-    }
-    public override void OnExit()
-    {
-        GetModelAnimator().SetBool("isInBoostedRolyPoly", false);
-        PlayCrossfade("Body", "ExitRolyPoly", 0.1f);
-        //chefControl.blockOtherSkills = false;
-
-        if (NetworkServer.active) characterBody.RemoveBuff(CookingBuff.BuffDef);
-
-        Util.PlaySound("Stop_chef_skill3_boosted_active_loop", gameObject);
-
-        base.OnExit();
     }
     public override void FixedUpdate()
     {
@@ -103,15 +90,28 @@ public class CookState : GenericCharacterMain
         setDuration -= GetDeltaTime();
         if (setDuration <= 0)
         {
-            setDuration = BaseAttackRate;
+            setDuration = PluginConfig.Attack_Rate.Value / PluginConfig.Attack_Instances.Value;
             attackCount += 1;
+
+            characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 1.5f);
             AreaSlash();
         }
 
-        if (attackCount > AttackInstances && isAuthority)
+        if (attackCount > PluginConfig.Attack_Instances.Value && isAuthority)
         {
             outer.SetNextStateToMain();
         }
+    }
+    public override void OnExit()
+    {
+        chefControl.blockOtherSkills = false;
+        Util.PlaySound("Stop_chef_skill3_boosted_active_loop", gameObject);
+        GetModelAnimator().SetBool("isInBoostedRolyPoly", false);
+        PlayCrossfade("Body", "ExitRolyPoly", 0.1f);
+
+        if (NetworkServer.active) characterBody.RemoveBuff(CookingBuff.BuffDef);
+
+        base.OnExit();
     }
 
     private void AreaSlash()
@@ -132,14 +132,14 @@ public class CookState : GenericCharacterMain
             attackerFiltering = AttackerFiltering.NeverHitSelf,
             position = characterBody.corePosition,
             teamIndex = GetTeam(),
-            radius = Radius,
-            baseDamage = damageStat * DamageCoefficient,
+            radius = PluginConfig.Radius.Value,
+            procCoefficient = PluginConfig.Proc_Coefficient.Value,
+            baseDamage = damageStat * PluginConfig.Damage_Coefficient.Value / 100,
             damageColorIndex = DamageColorIndex.Default,
             damageType = new DamageTypeCombo(DamageType.Stun1s, DamageTypeExtended.ChefSource, DamageSource.Special),
             crit = isCrit,
             falloffModel = BlastAttack.FalloffModel.None,
-            impactEffect = sliceImpact.effectIndex,
-            procCoefficient = 1
+            impactEffect = sliceImpact.effectIndex
         };
 
         DamageAPI.AddModdedDamageType(areaSlash, CookDamageType.DamageType);

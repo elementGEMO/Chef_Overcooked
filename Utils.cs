@@ -103,9 +103,7 @@ internal static class StringHelper
     public static string OptText(this string self, string opt, bool value) => value ? self : opt;
     public static string FuseText(List<string> allStrings) => string.Join("", allStrings);
 }
-
-/*
-internal class SAOverlay
+internal class OverlayHelper
 {
     public static void AddOverlay(CharacterModel model, Material overlayMaterial)
     {
@@ -117,4 +115,3 @@ internal class SAOverlay
         allOverlays[overlayCount] = overlayMaterial;
     }
 }
-*/

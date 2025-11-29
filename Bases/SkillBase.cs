@@ -18,18 +18,19 @@ public abstract class SkillBase : GenericBase<SkillDef>
     protected virtual InterruptPriority InterruptPriority           => default;
     protected virtual string ActivationStateMachine                 => null;
     protected virtual SerializableEntityStateType ActivationState   => default;
-    protected virtual bool IsCombatSkill                            => default;
-    protected virtual bool MustKeyPress                             => default;
+    protected virtual bool IsCombatSkill                            => false;
+    protected virtual bool MustKeyPress                             => false;
 
-    protected virtual bool CancelSprintOnActivation => default;
-    protected virtual bool ForceSprintDuringState   => default;
-    protected virtual bool CanceledFromSprinting    => default;
+    protected virtual bool CancelSprintOnActivation => false;
+    protected virtual bool ForceSprintDuringState   => false;
+    protected virtual bool CanceledFromSprinting    => false;
 
-    protected virtual float BaseCooldown    => default;
-    protected virtual int BaseMaxStock      => default;
-    protected virtual int RechargeStock     => default;
-    protected virtual int RequiredStock     => default;
-    protected virtual int StockToConsume    => default;
+    protected virtual bool CooldownOnSkillEnd   => false;
+    protected virtual float BaseCooldown        => default;
+    protected virtual int BaseMaxStock          => default;
+    protected virtual int RechargeStock         => default;
+    protected virtual int RequiredStock         => default;
+    protected virtual int StockToConsume        => default;
 
     protected override void Create()
     {
@@ -47,6 +48,7 @@ public abstract class SkillBase : GenericBase<SkillDef>
         Value.isCombatSkill = IsCombatSkill;
         Value.mustKeyPress = MustKeyPress;
 
+        Value.beginSkillCooldownOnSkillEnd = CooldownOnSkillEnd;
         Value.cancelSprintingOnActivation = CancelSprintOnActivation;
         Value.forceSprintDuringState = ForceSprintDuringState;
         Value.canceledFromSprinting = CanceledFromSprinting;

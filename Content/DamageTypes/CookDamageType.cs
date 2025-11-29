@@ -142,7 +142,7 @@ public class CookDamageType
                             SkillDef selectSpecial = viewerBody.skillLocator?.special?.skillDef;
                             bool hasCookAbility = selectSpecial ? selectSpecial == SpecialCookSkill.SkillDef : false;
 
-                            if (hasCookAbility) cull = Math.Max(cull, 0.1f);
+                            if (hasCookAbility) cull = Math.Max(cull, PluginConfig.Execute_Threshold.Value);
                         }
                     }
 
@@ -183,7 +183,7 @@ public class CookDamageType
 
                 cursor.EmitDelegate<Func<HealthComponent, DamageInfo, float, float>>((self, damageInfo, damagePercent) =>
                 {
-                    if (DamageAPI.HasModdedDamageType(damageInfo, DamageType) && damagePercent <= 0.1f) damagePercent = 0.1f;
+                    if (DamageAPI.HasModdedDamageType(damageInfo, DamageType) && damagePercent <= PluginConfig.Execute_Threshold.Value) damagePercent = PluginConfig.Execute_Threshold.Value;
                     return damagePercent;
                 });
 
@@ -245,9 +245,9 @@ public class CookDamageType
         public void SetAttacker(CharacterBody attacker)
         {
             LastAttacker = attacker;
-            Duration = 1f;
+            Duration = PluginConfig.Execute_Leniency.Value;
         }
-        public void Awake() => Duration = 1f;
+        public void Awake() => Duration = PluginConfig.Execute_Leniency.Value;
         public void FixedUpdate()
         {
             Duration -= Time.fixedDeltaTime;
@@ -292,7 +292,7 @@ public class CookDamageType
                 UserProfile userProfile = chefBody.master?.playerCharacterMasterController?.networkUser?.localUser?.userProfile;
                 userProfile?.DiscoverPickup(PickupCatalog.FindPickupIndex(MonsterMeatItem.ItemDef.itemIndex));
 
-                chefBody.AddTimedBuff(MeatTimerBuff.BuffDef, 1f);
+                chefBody.AddTimedBuff(MeatTimerBuff.BuffDef, 1.5f);
             }
         }
     }

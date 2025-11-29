@@ -1,51 +1,79 @@
 ﻿using BepInEx.Configuration;
-using Rewired.UI.ControlMapper;
-using RoR2;
+using HG;
 using UnityEngine;
 
 namespace ChefOvercooked;
 public static class PluginConfig
 {
-    public static ConfigEntry<bool> Enable_Logging;
     public static ConfigEntry<bool> Set_Default;
-    //public static ConfigEntry<RewriteOptions> Rework_Name;
     public static ConfigEntry<int> Round_To;
+
+    public static ConfigEntry<int> Attack_Instances;
+    public static ConfigEntry<int> Damage_Coefficient;
+    public static ConfigEntry<float> Proc_Coefficient;
+    public static ConfigEntry<float> Attack_Rate;
+    public static ConfigEntry<float> Radius;
+
+    public static ConfigEntry<float> Execute_Threshold;
+    public static ConfigEntry<float> Execute_Leniency;
 
     public static void Init()
     {
         GeneralInit();
+        SkillInit();
     }
 
     private static void GeneralInit()
     {
         string token = "! General !";
-        Enable_Logging = ChefOverCookedPlugin.Instance.Config.Bind(
-            token, "Enable Logs", true,
-            "[ True = Enables Logging | False = Disables Logging ]\nDisclaimer: Makes debugging harder when disabled"
-        );
-        /*
+
         Set_Default = ChefOverCookedPlugin.Instance.Config.Bind(
             token, "Default Configs", true,
-            "[ True = Sets item configs to default (Except Item Enabled) | False = Configs can be changed ]\nUseful for when Default Values get updated"
+            "[ True = Resets configs on launch (Except Enable Toggles) | False = Configs can be changed ]\nUseful for when Default Values get updated"
         );
-        /*
-        Rework_Name = SotAPlugin.Instance.Config.Bind(
-            token, "Relic Names", RewriteOptions.Relic,
-            "[ Changes the naming conventions of Lunars | Does not effect 'Disables ...' ]"
-        );
-        */
-        /*
-        CooldownHooks.Cooldown_Minimum = LoEPlugin.Instance.Config.Bind(
-            token, "Cooldown Minimum", 0f,
-            "[ 0 = 0s Minimum | Cooldown Reduction Value, Vanilla is 0.5s ]"
-        );
-        */
         Round_To = ChefOverCookedPlugin.Instance.Config.Bind(
             token, "Item Stat Rounding", 0,
             "[ 0 = Whole | 1 = Tenths | 2 = Hundrenths | 3 = ... ]\nRounds item values to respective decimal point"
         );
+    }
+    private static void SkillInit()
+    {
+        string token = "Chef Special - Cook";
 
-        //SotAPlugin.Instance.Config.Count
+        Attack_Instances = ChefOverCookedPlugin.Instance.Config.Bind(
+            token, "Attack Count", 6,
+            "[ # of Times this Skill will deal Damage ]"
+        ).PostConfig(MathProcess.Max, 1);
+
+        Damage_Coefficient = ChefOverCookedPlugin.Instance.Config.Bind(
+            token, "Damage Number", 150,
+            "[ #% of Base Damage for this Skill to Deal per Attack ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Proc_Coefficient = ChefOverCookedPlugin.Instance.Config.Bind(
+            token, "Proc Coefficient", 1f,
+            "[ # Proc Coefficient set per Attack ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Attack_Rate = ChefOverCookedPlugin.Instance.Config.Bind(
+            token, "Attack Duration", 1f,
+            "[ # Seconds this Attack will last ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Radius = ChefOverCookedPlugin.Instance.Config.Bind(
+            token, "Attack Radius", 7.5f,
+            "[ # Meters for the Radius of this Skill ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Execute_Threshold = ChefOverCookedPlugin.Instance.Config.Bind(
+            token, "Execute Threshold", 0.1f,
+            "[ # (0 - 1), converted to % of Execute Health when using this Skill ]"
+        ).PostConfig(MathProcess.Max, 0).PostConfig(MathProcess.Min, 1);
+
+        Execute_Leniency = ChefOverCookedPlugin.Instance.Config.Bind(
+            token, "Execute Leniency", 1f,
+            "[ # Seconds extra to Execute when using this Skill ]"
+        ).PostConfig(MathProcess.Max, 0);
     }
     public enum MathProcess
     {

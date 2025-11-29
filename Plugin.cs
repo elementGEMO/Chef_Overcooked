@@ -15,6 +15,7 @@ namespace ChefOvercooked
     [BepInDependency(DamageAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(PrefabAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(LanguageAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(RecalculateStatsAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
 
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     public class ChefOverCookedPlugin : BaseUnityPlugin
@@ -35,26 +36,37 @@ namespace ChefOvercooked
             SetUpAssets();
 
             PluginConfig.Init();
-            if (PluginConfig.Enable_Logging.Value) Log.Init(Logger);
+            Log.Init(Logger);
 
             CreateContent();
         }
 
-        public void CreateContent()
+        private void CreateContent()
         {
             new AllSounds();
 
-            new MonsterMeatItem();
-            new MeatTimerBuff();
-
-            new CookDamageType();
-            new CookingBuff();
-            new CookedBuff();
+            CreateItems();
+            CreateBuffs();
 
             CookState.CreateEffects();
             CookingState.CreateEffects();
 
+            new CookDamageType();
             new SpecialCookSkill();
+        }
+
+        private void CreateItems()
+        {
+            new MonsterMeatItem();
+            new PrimitiveClawsItem();
+        }
+        private void CreateBuffs()
+        {
+            new MeatTimerBuff();
+            new CookingBuff();
+            new CookedBuff();
+
+            new DamageOnBleedBuff();
         }
 
         private void SetUpAssets()

@@ -22,7 +22,12 @@ public class MeatTimerBuff : BuffBase
 
     private void CharacterBody_OnBuffFinalStackLost(On.RoR2.CharacterBody.orig_OnBuffFinalStackLost orig, CharacterBody self, BuffDef buffDef)
     {
-        if (buffDef == BuffDef && self.GetComponent<ChefController>())
+        if (buffDef != BuffDef) orig(self, buffDef);
+
+        bool hasMeat = self.inventory ? self.inventory.GetItemCountEffective(MonsterMeatItem.ItemDef) > 0 : false;
+        bool isChef = self.GetComponent<ChefController>();
+
+        if (hasMeat && isChef)
         {
             EntityStateMachine.FindByCustomName(self.gameObject, "Weapon").SetNextState(new CookingState());
         }
