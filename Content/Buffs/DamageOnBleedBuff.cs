@@ -18,7 +18,7 @@ public class DamageOnBleedBuff : BuffBase
     protected override string Name => "DamageOnBleed";
     public static BuffDef BuffDef;
     protected override Sprite IconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texDamageOnBleed");
-    protected override Color Color => new Color(0.910f, 0.506f, 0.239f);
+    protected override Color Color => new (0.910f, 0.506f, 0.239f);
     protected override bool IsHidden => false;
     protected override bool IsStackable => true;
 
@@ -60,7 +60,7 @@ public class DamageOnBleedBuff : BuffBase
         if (NetworkServer.active && buffDef == BuffDef)
         {
             int itemCount = self.inventory ? self.inventory.GetItemCountEffective(PrimitiveClawsItem.ItemDef) : 0;
-            int maxBuffs = 3 + 2 * (itemCount - 1);
+            int maxBuffs = PluginConfig.Claw_Stack_Cap.Value + PluginConfig.Claw_Stack_Increase.Value * (itemCount - 1);
 
             int buffCount = 0;
             int lastBuffIndex = -1;
@@ -95,11 +95,11 @@ public class DamageOnBleedBuff : BuffBase
                 self.timedBuffs[lastBuffIndex].timer = duration;
                 self.timedBuffs[lastBuffIndex].totalDuration = duration;
             }
-
-            return;
         }
-
-        orig(self, buffDef, duration);
+        else
+        {
+            orig(self, buffDef, duration);
+        }
     }
 
     private void GlobalEventManager_ProcessHitEnemy(ILContext il)

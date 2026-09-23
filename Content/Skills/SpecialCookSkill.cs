@@ -20,7 +20,7 @@ public class SpecialCookSkill : SkillBase
         PluginConfig.Attack_Instances.Value, PluginConfig.Damage_Coefficient.Value
     );
 
-    protected override Sprite SkillSprite       => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("TemporarySkillIcon");
+    protected override Sprite SkillSprite       => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("SkillCookIcon");
 
     protected override InterruptPriority InterruptPriority          => InterruptPriority.Frozen;
     protected override string ActivationStateMachine                => "Weapon";

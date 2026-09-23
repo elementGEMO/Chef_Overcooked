@@ -22,12 +22,7 @@
     <PackageReference Include="R2API.RecalculateStats" Version="1.6.3" />
     <PackageReference Include="RiskOfRain2.GameLibs" Version="1.4.0-r.0" />
     <PackageReference Include="RoR2BepInExPack" Version="1.36.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="ShaderSwapper">
-      <HintPath>..\Libraries\ShaderSwapper.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Smooth_Salad-ShaderSwapper" Version="1.0.1" />
   </ItemGroup>
 
   <PropertyGroup>

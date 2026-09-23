@@ -87,6 +87,8 @@ public class CookState : GenericCharacterMain
         base.FixedUpdate();
         if (chefControl == null) return;
 
+        SlashEffectSpawn();
+
         setDuration -= GetDeltaTime();
         if (setDuration <= 0)
         {
@@ -113,17 +115,18 @@ public class CookState : GenericCharacterMain
 
         base.OnExit();
     }
-
-    private void AreaSlash()
+    private void SlashEffectSpawn()
     {
-        if (!isAuthority) return;
-
         EffectManager.SpawnEffect(SpinEffect.prefab, new EffectData()
         {
             rootObject = gameObject,
             origin = characterBody.corePosition,
             rotation = Quaternion.identity
         }, true);
+    }
+    private void AreaSlash()
+    {
+        if (!isAuthority) return;
 
         BlastAttack areaSlash = new()
         {

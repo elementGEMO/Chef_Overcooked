@@ -5,9 +5,11 @@ using UnityEngine;
 namespace ChefOvercooked;
 public static class PluginConfig
 {
+    // General Configs
     public static ConfigEntry<bool> Set_Default;
     public static ConfigEntry<int> Round_To;
 
+    // Chef Special Configs
     public static ConfigEntry<int> Attack_Instances;
     public static ConfigEntry<int> Damage_Coefficient;
     public static ConfigEntry<float> Proc_Coefficient;
@@ -16,11 +18,21 @@ public static class PluginConfig
 
     public static ConfigEntry<float> Execute_Threshold;
     public static ConfigEntry<float> Execute_Leniency;
+    public static ConfigEntry<float> Temp_Duration;
+
+    // Item Configs
+
+    // Primitive Claws
+    public static ConfigEntry<float> Claw_Base_Bleed;
+    public static ConfigEntry<float> Claw_Damage_Stack;
+    public static ConfigEntry<int> Claw_Stack_Cap;
+    public static ConfigEntry<int> Claw_Stack_Increase;
 
     public static void Init()
     {
         GeneralInit();
         SkillInit();
+        ItemInit();
     }
 
     private static void GeneralInit()
@@ -73,6 +85,35 @@ public static class PluginConfig
         Execute_Leniency = ChefOverCookedPlugin.Instance.Config.Bind(
             token, "Execute Leniency", 1f,
             "[ # Seconds extra to Execute when using this Skill ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Temp_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
+            token, "Temp Food Duration", 0.333f,
+            "[ #, converted to % for how long Temporary Food items should be from this Skill ]"
+        ).PostConfig(MathProcess.Max, 0);
+    }
+    private static void ItemInit()
+    {
+        string clawsToken = "Item - Primitive Claws";
+
+        Claw_Base_Bleed = ChefOverCookedPlugin.Instance.Config.Bind(
+            clawsToken, "Bleed Chance", 5f,
+            "[ #% Bleed Chance ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Claw_Damage_Stack = ChefOverCookedPlugin.Instance.Config.Bind(
+            clawsToken, "Damage per Buff", 8f,
+            "[ #% Damage Increase for each stack from inflicting Bleed ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Claw_Stack_Cap = ChefOverCookedPlugin.Instance.Config.Bind(
+            clawsToken, "Base Buff Cap", 3,
+            "[ # of Max Buffs from inflicting Bleed ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Claw_Stack_Increase = ChefOverCookedPlugin.Instance.Config.Bind(
+            clawsToken, "Buff Cap Stack", 2,
+            "[ # of Max Buffs added per single item stack ]"
         ).PostConfig(MathProcess.Max, 0);
     }
     public enum MathProcess

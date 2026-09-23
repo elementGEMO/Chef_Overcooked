@@ -25,7 +25,7 @@ public class MeatTimerBuff : BuffBase
         if (buffDef != BuffDef) orig(self, buffDef);
 
         bool hasMeat = self.inventory ? self.inventory.GetItemCountEffective(MonsterMeatItem.ItemDef) > 0 : false;
-        bool isChef = self.GetComponent<ChefController>();
+        bool isChef = self ? self.GetComponent<ChefController>() : false;
 
         if (hasMeat && isChef)
         {

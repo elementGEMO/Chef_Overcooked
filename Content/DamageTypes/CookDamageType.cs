@@ -30,6 +30,7 @@ public class CookDamageType
 
     private void ItemDef_AttemptGrant(ILContext il)
     {
+        /*
         ILCursor cursor = new(il);
 
         if (cursor.TryGotoNext(
@@ -49,10 +50,12 @@ public class CookDamageType
         }
         else Log.Error("COOK_DAMAGE_TYPE_ATTEMPTGRANT_1 failed to ILHook #1");
 
-        cursor              = new(il);
+        cursor              = new(il);*/
+
+        ILCursor cursor     = new(il);
         ILLabel breakState  = null;
         int pickupDefIndex  = -1;
-        int duplicateIndex = -1;
+        int duplicateIndex  = -1;
 
         cursor.TryGotoNext(
             x => x.MatchLdfld(typeof(PickupDef), nameof(PickupDef.itemIndex)),
@@ -292,7 +295,7 @@ public class CookDamageType
                 UserProfile userProfile = chefBody.master?.playerCharacterMasterController?.networkUser?.localUser?.userProfile;
                 userProfile?.DiscoverPickup(PickupCatalog.FindPickupIndex(MonsterMeatItem.ItemDef.itemIndex));
 
-                chefBody.AddTimedBuff(MeatTimerBuff.BuffDef, 1.5f);
+                chefBody.AddTimedBuff(MeatTimerBuff.BuffDef, 2f);
             }
         }
     }

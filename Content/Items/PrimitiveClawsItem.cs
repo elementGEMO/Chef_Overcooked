@@ -22,8 +22,16 @@ public class PrimitiveClawsItem : ItemBase
 
     protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("primitiveClawsModel");
     protected override Sprite PickupIconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texPrimitiveClawsIcon");
+    protected override string PickupText => string.Format("Inflicting bleed increases damage. Stacks {0} times.", PluginConfig.Claw_Stack_Cap.Value);
     protected override string Description => FuseText([
-        "Gain 5% bleed chance. Inflicting bleed increases damage by 15%. Maximum cap of 45% (+30% per stack) damage."
+        string.Format("Gain " + "{0}% bleed chance".Style(FontColor.cIsDamage) + ". ",
+            RoundVal(PluginConfig.Claw_Base_Bleed.Value)),
+
+        string.Format("Inflicting " + "bleed ".Style(FontColor.cIsDamage) + "increases damage by " + "{0}%".Style(FontColor.cIsDamage) + ". ",
+            RoundVal(PluginConfig.Claw_Damage_Stack.Value)),
+
+        string.Format("Maximum cap of " + "{0}% ".Style(FontColor.cIsDamage) + "({1}% per stack) ".Style(FontColor.cStack).OptText(PluginConfig.Claw_Stack_Increase.Value > 0) + "damage.",
+            RoundVal(PluginConfig.Claw_Damage_Stack.Value * PluginConfig.Claw_Stack_Cap.Value), RoundVal(PluginConfig.Claw_Damage_Stack.Value * PluginConfig.Claw_Stack_Increase.Value).SignVal())
     ]);
 
     protected override string DisplayName => "Primitive Claws";
@@ -39,7 +47,7 @@ public class PrimitiveClawsItem : ItemBase
     {
         bool hasItem = sender.inventory ? sender.inventory.GetItemCountEffective(ItemDef) > 0 : false;
 
-        if (hasItem) args.bleedChanceAdd += 5;
+        if (hasItem) args.bleedChanceAdd += PluginConfig.Claw_Base_Bleed.Value;
     }
 
     protected override void LogDisplay()
