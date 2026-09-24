@@ -101,6 +101,7 @@ public class CookState : GenericCharacterMain
 
         if (attackCount > PluginConfig.Attack_Instances.Value && isAuthority)
         {
+            characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 2f);
             outer.SetNextStateToMain();
         }
     }

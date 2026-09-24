@@ -5,6 +5,7 @@ using RoR2BepInExPack.GameAssetPathsBetter;
 using R2API;
 using EntityStates;
 using BepInEx.Configuration;
+using R2API.Utils;
 
 namespace ChefOvercooked;
 using static HelperFontColor;

@@ -2,7 +2,6 @@
 using RoR2;
 using UnityEngine;
 using System.Collections.Generic;
-using System;
 
 namespace ChefOvercooked;
 public class CookingState : GenericCharacterMain
@@ -19,32 +18,68 @@ public class CookingState : GenericCharacterMain
 
     private static void Run_onRunStartGlobal(Run instance)
     {
-        bool isAlloyedEnabled   = instance.IsExpansionEnabled(ChefOverCookedPlugin.AlloyedCollective);
-        RunMealItemDefs         = [];
+        PluginConfig.ItemOptions itemPool   = PluginConfig.FoodDrops.Value;
+        bool isAlloyedEnabled               = instance.IsExpansionEnabled(ChefOverCookedPlugin.AlloyedCollective);
+        RunMealItemDefs                     = [];
 
-        if (isAlloyedEnabled)
+        if (itemPool == PluginConfig.ItemOptions.Ingredients || !isAlloyedEnabled)
         {
             foreach (ItemDef itemDef in ItemCatalog.allItemDefs)
             {
                 if (itemDef == null) continue;
-                if (itemDef.tier != ItemTier.FoodTier) continue;
-                if (itemDef == MonsterMeatItem.ItemDef) continue;
                 if (!instance.IsItemAvailable(itemDef.itemIndex)) continue;
+                if (itemDef.DoesNotContainTag(ItemTag.FoodRelated)) continue;
 
-                RunMealItemDefs.Add(itemDef);
+                switch (itemDef.tier)
+                {
+                    case ItemTier.Tier1:
+                    case ItemTier.Tier2:
+                    case ItemTier.Tier3:
+                    case ItemTier.Boss:
+                        RunMealItemDefs.Add(itemDef);
+                        break;
+                }
             }
-        }
+        } 
         else
         {
-            foreach (ItemIndex itemIndex in instance.availableItems)
+            if (itemPool == PluginConfig.ItemOptions.FoodTier)
             {
-                ItemDef itemDef = ItemCatalog.GetItemDef(itemIndex);
+                foreach (ItemDef itemDef in ItemCatalog.allItemDefs)
+                {
+                    if (itemDef == null) continue;
+                    if (!instance.IsItemAvailable(itemDef.itemIndex)) continue;
+                    if (itemDef.tier != ItemTier.FoodTier) continue;
+                    if (itemDef == MonsterMeatItem.ItemDef) continue;
 
-                if (itemDef == null) continue;
-                if (itemDef.tier != ItemTier.NoTier) continue;
-                if (!instance.IsItemAvailable(itemDef.itemIndex)) continue;
+                    RunMealItemDefs.Add(itemDef);
+                }
+            }
+            else
+            {
+                foreach (ItemDef itemDef in ItemCatalog.allItemDefs)
+                {
+                    if (itemDef == null) continue;
+                    if (!instance.IsItemAvailable(itemDef.itemIndex)) continue;
+                    if (itemDef == MonsterMeatItem.ItemDef) continue;
 
-                RunMealItemDefs.Add(itemDef);
+                    if (itemDef.tier == ItemTier.FoodTier)
+                    {
+                        RunMealItemDefs.Add(itemDef);
+                    }
+                    else if (itemDef.ContainsTag(ItemTag.FoodRelated))
+                    {
+                        switch (itemDef.tier)
+                        {
+                            case ItemTier.Tier1:
+                            case ItemTier.Tier2:
+                            case ItemTier.Tier3:
+                            case ItemTier.Boss:
+                                RunMealItemDefs.Add(itemDef);
+                                break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -80,8 +115,8 @@ public class CookingState : GenericCharacterMain
     {
         base.OnEnter();
 
-        hasPlayedSound = false;
-        hasPlayedAnim = false;
+        hasPlayedSound  = false;
+        hasPlayedAnim   = false;
     }
     public override void OnExit()
     {

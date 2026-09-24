@@ -27,12 +27,14 @@ public class PrimitiveClawsItem : ItemBase
         string.Format("Gain " + "{0}% bleed chance".Style(FontColor.cIsDamage) + ". ",
             RoundVal(PluginConfig.Claw_Base_Bleed.Value)),
 
-        string.Format("Inflicting " + "bleed ".Style(FontColor.cIsDamage) + "increases damage by " + "{0}%".Style(FontColor.cIsDamage) + ". ",
+        string.Format("Inflicting " + "bleed ".Style(FontColor.cIsDamage) + "increases base damage by " + "{0}%".Style(FontColor.cIsDamage) + ". ",
             RoundVal(PluginConfig.Claw_Damage_Stack.Value)),
 
         string.Format("Maximum cap of " + "{0}% ".Style(FontColor.cIsDamage) + "({1}% per stack) ".Style(FontColor.cStack).OptText(PluginConfig.Claw_Stack_Increase.Value > 0) + "damage.",
             RoundVal(PluginConfig.Claw_Damage_Stack.Value * PluginConfig.Claw_Stack_Cap.Value), RoundVal(PluginConfig.Claw_Damage_Stack.Value * PluginConfig.Claw_Stack_Increase.Value).SignVal())
     ]);
+    protected override string Lore => "<style=cMono>//-- INITIALIZING UES BIOLOGICAL SPECIMEN DATABASE. --\n//-- PLEASE ENTER COMMAND. FOR LIST OF COMMANDS, TYPE ''HELP''. --//\n\n></style>new\n\n<style=cMono>>> PLEASE ENTER UNIQUE ENTRY ID...\n\n></style>lemurian claws\n\n<style=cMono>>> 216 ENTRIES FOUND MATCHING NAME: lemurian claws. PLEASE ENTER UNIQUE IDENTIFIER...\n\n></style>lemurian claws 217\n\n<style=cMono>>> PLEASE DESCRIBE SPECIMEN...\n\n></style>One of the grunts handed me these in a biohazard disposal bag, half submerged in blood and leaking all over my desk. Great job on the biohazard containment. Blood came back with 6 different matches. Four of them human, all our guys, one of which was the grunt who gave me the claws. Lovely. \n\nThe even abrasion patterns suggest that all four claws came from the same creature. Claws show significant wear and numerous growth layers, which means that this was likely one of the older, yellow Lemurian variants we've observed. Still sharp as hell, though. I added a 7th identifiable match to that pool of blood because I got too eager pulling them out of the bag. \n\nOne interesting aspect is the specific markings found on the claws. When lining the claws up as they would sit on a lemurian's hand, I've found multiple indents in an arc shape, perhaps bite marks? Let me run it against the database and see what this thing was fighting. Indents come back as... Human teeth.\n\nThink I know what the grunt meant now when he said ''Don't ask how I got 'em''.\n\n<style=cMono>>> ENTRY FINALIZED. PUBLISH? y/n...\n\n></style>y\n\n<style=cMono>>> ENTRY PUBLISHED.</style>";
+    // Log provided by @plnk
 
     protected override string DisplayName => "Primitive Claws";
 

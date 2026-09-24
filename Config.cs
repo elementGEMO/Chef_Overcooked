@@ -5,11 +5,20 @@ using UnityEngine;
 namespace ChefOvercooked;
 public static class PluginConfig
 {
+    public enum ItemOptions
+    {
+        FoodTier,
+        Ingredients,
+        Both
+    }
+
     // General Configs
     public static ConfigEntry<bool> Set_Default;
     public static ConfigEntry<int> Round_To;
 
     // Chef Special Configs
+    public static ConfigEntry<ItemOptions> FoodDrops;
+
     public static ConfigEntry<int> Attack_Instances;
     public static ConfigEntry<int> Damage_Coefficient;
     public static ConfigEntry<float> Proc_Coefficient;
@@ -51,6 +60,11 @@ public static class PluginConfig
     private static void SkillInit()
     {
         string token = "Chef Special - Cook";
+
+        FoodDrops = ChefOverCookedPlugin.Instance.Config.Bind(
+            token, "Food Items from Skill", ItemOptions.FoodTier,
+            "[ Which Items will be temporarily created. Overwritten regardless if Alloyed Collective is disabled ]"
+        ).PostConfig();
 
         Attack_Instances = ChefOverCookedPlugin.Instance.Config.Bind(
             token, "Attack Count", 6,
