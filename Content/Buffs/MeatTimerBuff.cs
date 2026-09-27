@@ -24,10 +24,11 @@ public class MeatTimerBuff : BuffBase
     {
         if (buffDef != BuffDef) orig(self, buffDef);
 
-        bool hasMeat = self.inventory ? self.inventory.GetItemCountEffective(MonsterMeatItem.ItemDef) > 0 : false;
-        bool isChef = self ? self.GetComponent<ChefController>() : false;
+        bool hasBuff    = self.HasBuff(BuffDef);
+        bool hasMeat    = self.inventory ? self.inventory.GetItemCountEffective(MonsterMeatItem.ItemDef) > 0 : false;
+        bool isChef     = self ? self.GetComponent<ChefController>() : false;
 
-        if (hasMeat && isChef)
+        if (!hasBuff && hasMeat && isChef)
         {
             EntityStateMachine.FindByCustomName(self.gameObject, "Weapon").SetNextState(new CookingState());
         }

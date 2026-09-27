@@ -282,7 +282,7 @@ public class CookDamageType
         {
             chefBody = target.healthComponent ? target.healthComponent.body : null;
             orbEffectPrefab = MeatEffect;
-            travelDuration *= UnityEngine.Random.Range(0.5f, 1.5f);
+            travelDuration *= UnityEngine.Random.Range(1f, 1.5f);
             base.Begin();
         }
         public override void OnArrival()
@@ -295,7 +295,7 @@ public class CookDamageType
                 UserProfile userProfile = chefBody.master?.playerCharacterMasterController?.networkUser?.localUser?.userProfile;
                 userProfile?.DiscoverPickup(PickupCatalog.FindPickupIndex(MonsterMeatItem.ItemDef.itemIndex));
 
-                chefBody.AddTimedBuff(MeatTimerBuff.BuffDef, 2f);
+                chefBody.AddTimedBuff(MeatTimerBuff.BuffDef, 1.75f);
             }
         }
     }

@@ -37,6 +37,12 @@ public static class PluginConfig
     public static ConfigEntry<int> Claw_Stack_Cap;
     public static ConfigEntry<int> Claw_Stack_Increase;
 
+    // Grilled Lizard Kebab
+    public static ConfigEntry<float> Kebab_Base_Damage;
+    public static ConfigEntry<float> Kebab_Stack_Damage;
+    public static ConfigEntry<float> Kebab_Lem_Damage;
+    public static ConfigEntry<int> Kebab_Lem_Cap;
+
     public static void Init()
     {
         GeneralInit();
@@ -102,8 +108,8 @@ public static class PluginConfig
         ).PostConfig(MathProcess.Max, 0);
 
         Temp_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
-            token, "Temp Food Duration", 0.333f,
-            "[ #, converted to % for how long Temporary Food items should be from this Skill ]"
+            token, "Temp Food Stack", 0.5f,
+            "[ One Temporary Food item is worth # compared to one stack ]"
         ).PostConfig(MathProcess.Max, 0);
     }
     private static void ItemInit()
@@ -128,6 +134,28 @@ public static class PluginConfig
         Claw_Stack_Increase = ChefOverCookedPlugin.Instance.Config.Bind(
             clawsToken, "Buff Cap Stack", 2,
             "[ # of Max Buffs added per single item stack ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        string kebabToken = "Item - Grilled Lizard Kebab";
+
+        Kebab_Base_Damage = ChefOverCookedPlugin.Instance.Config.Bind(
+            kebabToken, "Base Damage", 30f,
+            "[ #% Damage Dealt increased ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Kebab_Stack_Damage = ChefOverCookedPlugin.Instance.Config.Bind(
+            kebabToken, "Damage per Stack", 15f,
+            "[ #% Damage Dealt increased per stack of Item ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Kebab_Lem_Damage = ChefOverCookedPlugin.Instance.Config.Bind(
+            kebabToken, "Lemurian Damage Inherit", 200f,
+            "[ #% Damage Inherited for the Lemurian ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Kebab_Lem_Cap = ChefOverCookedPlugin.Instance.Config.Bind(
+            kebabToken, "Lemurian Cap", 1,
+            "[ # of Lemurians that can spawn ]"
         ).PostConfig(MathProcess.Max, 0);
     }
     public enum MathProcess

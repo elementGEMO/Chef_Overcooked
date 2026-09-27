@@ -173,14 +173,14 @@ public class CookingState : GenericCharacterMain
 
         if (!hasPlayedAnim)
         {
-            PlayAnimation("Gesture, Override", "FireYesChef", "FireYesChef.playbackRate", 1f, 0f);
             hasPlayedAnim = true;
+            PlayAnimation("Gesture, Override", "FireYesChef", "FireYesChef.playbackRate", 1f, 0f);
         }
 
         if (fixedAge >= 0.25 && !hasPlayedSound)
         {
-            Util.PlaySound("Play_chef_skill4_boost_activate", gameObject);
             hasPlayedSound = true;
+            Util.PlaySound("Play_chef_skill4_boost_activate", gameObject);
         }
 
         if (fixedAge >= 1.05 && isAuthority)
@@ -188,5 +188,5 @@ public class CookingState : GenericCharacterMain
             outer.SetNextStateToMain();
         }
     }
-    public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Frozen;
+    public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Death;
 }

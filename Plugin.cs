@@ -39,6 +39,7 @@ namespace ChefOvercooked
             Log.Init(Logger);
 
             CreateContent();
+            RecipeCatalogChef.Init();
         }
 
         private void CreateContent()
@@ -59,6 +60,7 @@ namespace ChefOvercooked
         {
             new MonsterMeatItem();
             new PrimitiveClawsItem();
+            new GrilledLizardKebabItem();
         }
         private void CreateBuffs()
         {
@@ -67,6 +69,7 @@ namespace ChefOvercooked
             new CookedBuff();
 
             new DamageOnBleedBuff();
+            new SpectralBuff();
         }
 
         private void SetUpAssets()

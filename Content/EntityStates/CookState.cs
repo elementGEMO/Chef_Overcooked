@@ -89,19 +89,22 @@ public class CookState : GenericCharacterMain
 
         SlashEffectSpawn();
 
+        characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 0.1f);
+
         setDuration -= GetDeltaTime();
         if (setDuration <= 0)
         {
             setDuration = PluginConfig.Attack_Rate.Value / PluginConfig.Attack_Instances.Value;
             attackCount += 1;
 
-            characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 1.5f);
             AreaSlash();
         }
 
         if (attackCount > PluginConfig.Attack_Instances.Value && isAuthority)
         {
-            characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 2f);
+            if (characterBody.inventory && characterBody.inventory.GetItemCount(MonsterMeatItem.ItemDef) > 0)
+                characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 2f);
+
             outer.SetNextStateToMain();
         }
     }
