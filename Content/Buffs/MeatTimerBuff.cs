@@ -30,7 +30,8 @@ public class MeatTimerBuff : BuffBase
 
         if (!hasBuff && hasMeat && isChef)
         {
-            EntityStateMachine.FindByCustomName(self.gameObject, "Weapon").SetNextState(new CookingState());
+            EntityStateMachine.FindByCustomName(self.gameObject, "Weapon").SetState(new CookingState());
+            //EntityStateMachine.FindByCustomName(self.gameObject, "Weapon").Set(new CookingState());
         }
 
         orig(self, buffDef);

@@ -58,9 +58,13 @@ namespace ChefOvercooked
 
         private void CreateItems()
         {
-            new MonsterMeatItem();
+            // Regular Items
             new PrimitiveClawsItem();
+
+            // Food / Meal Items
+            new MonsterMeatItem();
             new GrilledLizardKebabItem();
+            new GolemEssenceTwistItem();
         }
         private void CreateBuffs()
         {

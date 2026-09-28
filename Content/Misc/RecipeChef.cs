@@ -42,14 +42,14 @@ public class RecipeCatalogChef
     {
         foreach (RecipeString recipeString in RecipeBook)
         {
-            CraftableDef craftableDef   = recipeString.craftableDef;
-            string errorReason          = "";
+            CraftableDef craftableDef = recipeString.craftableDef;
+            string errorReason = "";
 
-            ItemDef inputOneItem        = ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex(recipeString.inputOne));
-            EquipmentDef inputOneEquip  = EquipmentCatalog.GetEquipmentDef(EquipmentCatalog.FindEquipmentIndex(recipeString.inputOne));
+            ItemDef inputOneItem = ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex(recipeString.inputOne));
+            EquipmentDef inputOneEquip = EquipmentCatalog.GetEquipmentDef(EquipmentCatalog.FindEquipmentIndex(recipeString.inputOne));
 
-            ItemDef inputTwoItem        = ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex(recipeString.inputTwo));
-            EquipmentDef inputTwoEquip  = EquipmentCatalog.GetEquipmentDef(EquipmentCatalog.FindEquipmentIndex(recipeString.inputTwo));
+            ItemDef inputTwoItem = ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex(recipeString.inputTwo));
+            EquipmentDef inputTwoEquip = EquipmentCatalog.GetEquipmentDef(EquipmentCatalog.FindEquipmentIndex(recipeString.inputTwo));
 
             ItemDef outputItem = ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex(recipeString.output));
 

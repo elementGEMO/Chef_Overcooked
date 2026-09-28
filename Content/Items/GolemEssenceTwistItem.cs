@@ -12,87 +12,60 @@ using UnityEngine;
 namespace ChefOvercooked;
 using static StringHelper;
 using static HelperFontColor;
-public class GrilledLizardKebabItem : ItemBase
+public class GolemEssenceTwistItem : ItemBase
 {
-    protected override string Name => "GrilledLizardKebab";
+    protected override string Name => "GolemEssenceTwist";
     public static ItemDef ItemDef;
     protected override CombinedItemTier Tier => ItemTier.FoodTier;
     protected override ItemTag[] Tags => [
-        ItemTag.Damage,
+        ItemTag.Healing,
+        ItemTag.Utility,
         ItemTag.FoodRelated,
         ItemTag.CanBeTemporary
     ];
 
     protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("grilledLizardKebabModel");
-    protected override Sprite PickupIconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texGrilledLizardKebabIcon");
-    protected override string PickupText => "Increases base damage and spawns a spectral Lemurian that inherits damage bonuses. It's still sizzling.";
+    //protected override Sprite PickupIconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texGrilledLizardKebabIcon");
+    protected override string PickupText => "...";
     protected override string Description => FuseText([
-        string.Format("Increase base damage by " + "{0}%".Style(FontColor.cIsDamage) + " ({1}% per stack)".Style(FontColor.cStack).OptText(PluginConfig.Kebab_Stack_Damage.Value > 0) + ". ",
-            RoundVal(PluginConfig.Kebab_Base_Damage.Value), RoundVal(PluginConfig.Kebab_Stack_Damage.Value).SignVal()),
-        
-        string.Format("Gain a spectral Lemurian that inherits " + "{0}% ".Style(FontColor.cIsDamage) + "of your " + "damage bonuses".Style(FontColor.cIsDamage) + ".",
-            RoundVal(PluginConfig.Kebab_Lem_Damage.Value))
+        ""
     ]);
-    protected override string DisplayName => "Grilled Lizard Kebab";
-
-    public static GameObject devotedLemMaster;
+    protected override string DisplayName => "Golem Essence with a Twist";
     protected override void Initialize()
     {
         ItemDef = Value;
 
-        devotedLemMaster = CreateLemurianMaster();
         RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
+        //On.RoR2.GenericPickupController.AttemptGrant
+        On.RoR2.CharacterBody.OnPickup += CharacterBody_OnPickup;
 
-        RecipeCatalogChef.AddRecipe(PrimitiveClawsItem.ItemDef.name, "GhostOnKill", Name);
+        //RecipeCatalogChef.AddRecipe(PrimitiveClawsItem.ItemDef.name, "GhostOnKill", Name);
     }
-    private GameObject CreateLemurianMaster()
+
+    private void CharacterBody_OnPickup(On.RoR2.CharacterBody.orig_OnPickup orig, CharacterBody self, CharacterBody.PickupClass pickupClass)
     {
-        GameObject masterPrefab = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<GameObject>(RoR2_CU8_LemurianEgg.DevotedLemurianMaster_prefab).WaitForCompletion();
-        BaseAI lemurianAI       = masterPrefab ? masterPrefab.GetComponent<BaseAI>() : null;
+        orig(self, pickupClass);
 
-        if (lemurianAI)
+        if (self.inventory && self.inventory.GetItemCountEffective(ItemDef) > 0)
         {
-            lemurianAI.copyLeaderTarget = true;
-            lemurianAI.aimVectorMaxSpeed = 200f;
-            lemurianAI.aimVectorDampTime = 0.05f;
-        }
-
-        foreach (AISkillDriver skill in masterPrefab.GetComponents<AISkillDriver>())
-        {
-            switch (skill.customName)
+            /*
+            switch (pickupClass)
             {
-                case "DevotedSecondarySkill":
-                    skill.maxDistance = 5f;
+                case CharacterBody.PickupClass.TempItem:
+                case CharacterBody.PickupClass.Item:
                     break;
-                case "StrafeAndShoot":
-                    skill.maxDistance = 30;
-                    skill.activationRequiresAimTargetLoS = true;
-                    break;
-                case "StopAndShoot":
-                    skill.maxDistance = 65;
-                    skill.minDistance = 30;
-                    skill.activationRequiresAimTargetLoS = true;
-                    skill.aimType = AISkillDriver.AimType.AtMoveTarget;
-                    break;
-                case "ReturnToLeaderDefault":
-                    skill.minDistance = 10;
-                    skill.shouldSprint = true;
-                    break;
-                case "Chase":
-                    skill.shouldSprint = true;
-                    break;
+                default:
+                    return;
             }
+            */
+
+            if (self.healthComponent) self.healthComponent.AddBarrier(self.maxHealth * 0.1f);
         }
-
-        UnityEngine.Object.Destroy(masterPrefab.GetComponent<DevotedLemurianController>());
-
-        return masterPrefab;
     }
+
     private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
     {
-        int itemCount = sender.inventory ? sender.inventory.GetItemCountEffective(ItemDef) : 0;
-
-        if (itemCount > 0) args.damageMultAdd += (PluginConfig.Kebab_Base_Damage.Value + PluginConfig.Kebab_Stack_Damage.Value * (itemCount - 1)) / 100;
+        args.armorAdd += sender.inventory ? sender.inventory.GetItemCount(ItemDef) * 40 : 0;
     }
 
     protected override void LogDisplay()
@@ -109,6 +82,7 @@ public class GrilledLizardKebabItem : ItemBase
     }
 }
 
+/*
 public class GrilledLizardKebabBehavior : BaseItemBodyBehavior
 {
     [ItemDefAssociation(useOnServer = true, useOnClient = false)]
@@ -163,3 +137,4 @@ public class GrilledLizardKebabBehavior : BaseItemBodyBehavior
         spectralLemurians.Clear();
     }
 }
+*/

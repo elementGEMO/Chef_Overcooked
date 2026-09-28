@@ -6,7 +6,49 @@ using System.Collections.Generic;
 namespace ChefOvercooked;
 public class CookingState : GenericCharacterMain
 {
-    private static List<ItemDef> RunMealItemDefs;
+    private static List<MealWeight> RunMealItemDefs;
+    private static List<ItemDef> WeightedMealItemDefs;
+
+    private class MealWeight(ItemDef itemDef)
+    {
+        public ItemDef itemDef = itemDef;
+
+        // Dumb function to average the tiers numerically to add a weighted randomness from the recipe
+        public int GetFrequency()
+        {
+            if (itemDef.tier != ItemTier.FoodTier) return NumFromTier(PickupCatalog.FindPickupIndex(itemDef.itemIndex));
+
+            CraftableCatalog.RecipeEntry[] recipeRelation = CraftableCatalog.FindAllRelatedRecipes(PickupCatalog.FindPickupIndex(itemDef.itemIndex));
+            float avgFrequency = 0;
+
+            foreach (CraftableCatalog.RecipeEntry recipe in recipeRelation)
+            {
+                foreach (PickupIndex pickupIndex in recipe.GetAllPickups())
+                {
+                    avgFrequency = avgFrequency == 0 ? avgFrequency + NumFromTier(pickupIndex) : NumFromTier(pickupIndex);
+                }
+            }
+
+            return (int) Mathf.Pow(avgFrequency, 1f / Mathf.Log10(4));
+        }
+        private int NumFromTier(PickupIndex pickupIndex)
+        {
+            ItemDef itemDef = ItemCatalog.GetItemDef(pickupIndex.itemIndex);
+
+            if (itemDef)
+            {
+                return itemDef.tier switch
+                {
+                    ItemTier.Tier2 => 3,
+                    ItemTier.Tier3 => 2,
+                    ItemTier.Boss => 1,
+                    _ => 4,
+                };
+            }
+
+            return 4;
+        }
+    }
 
     private bool hasPlayedSound;
     private bool hasPlayedAnim;
@@ -15,14 +57,14 @@ public class CookingState : GenericCharacterMain
     {
         Run.onRunStartGlobal += Run_onRunStartGlobal;
     }
-
     private static void Run_onRunStartGlobal(Run instance)
     {
-        PluginConfig.ItemOptions itemPool   = PluginConfig.FoodDrops.Value;
-        bool isAlloyedEnabled               = instance.IsExpansionEnabled(ChefOverCookedPlugin.AlloyedCollective);
-        RunMealItemDefs                     = [];
+        PluginConfig.ItemOptions itemOptions    = PluginConfig.FoodDrops.Value;
+        bool isDLC3Enabled                      = instance.IsExpansionEnabled(ChefOverCookedPlugin.AlloyedCollective);
+        RunMealItemDefs                         = [];
+        WeightedMealItemDefs                    = [];
 
-        if (itemPool == PluginConfig.ItemOptions.Ingredients || !isAlloyedEnabled)
+        if (itemOptions == PluginConfig.ItemOptions.Ingredients || !isDLC3Enabled)
         {
             foreach (ItemDef itemDef in ItemCatalog.allItemDefs)
             {
@@ -36,14 +78,14 @@ public class CookingState : GenericCharacterMain
                     case ItemTier.Tier2:
                     case ItemTier.Tier3:
                     case ItemTier.Boss:
-                        RunMealItemDefs.Add(itemDef);
+                        RunMealItemDefs.Add(new MealWeight(itemDef));
                         break;
                 }
             }
-        } 
+        }
         else
         {
-            if (itemPool == PluginConfig.ItemOptions.FoodTier)
+            if (itemOptions == PluginConfig.ItemOptions.FoodTier)
             {
                 foreach (ItemDef itemDef in ItemCatalog.allItemDefs)
                 {
@@ -52,7 +94,7 @@ public class CookingState : GenericCharacterMain
                     if (itemDef.tier != ItemTier.FoodTier) continue;
                     if (itemDef == MonsterMeatItem.ItemDef) continue;
 
-                    RunMealItemDefs.Add(itemDef);
+                    RunMealItemDefs.Add(new MealWeight(itemDef));
                 }
             }
             else
@@ -65,7 +107,7 @@ public class CookingState : GenericCharacterMain
 
                     if (itemDef.tier == ItemTier.FoodTier)
                     {
-                        RunMealItemDefs.Add(itemDef);
+                        RunMealItemDefs.Add(new MealWeight(itemDef));
                     }
                     else if (itemDef.ContainsTag(ItemTag.FoodRelated))
                     {
@@ -75,40 +117,34 @@ public class CookingState : GenericCharacterMain
                             case ItemTier.Tier2:
                             case ItemTier.Tier3:
                             case ItemTier.Boss:
-                                RunMealItemDefs.Add(itemDef);
+                                RunMealItemDefs.Add(new MealWeight(itemDef));
                                 break;
                         }
                     }
                 }
             }
         }
+
+        foreach (MealWeight item in RunMealItemDefs)
+        {
+            Log.Info(string.Format("Cook Item Pool - {0} ... {1}x", item.itemDef.name, item.GetFrequency()));
+            for (int i = 0; i < item.GetFrequency(); i++) WeightedMealItemDefs.Add(item.itemDef);
+        }
     }
     private PickupIndex RandomPickupIndex(CharacterMaster master = null)
     {
-        if (master)
-        {
-            using var _ = HG.ListPool<PickupIndex>.RentCollection(out List<PickupIndex> localMealItems);
-            UserProfile userProfile = master.playerCharacterMasterController?.networkUser?.localUser?.userProfile;
+        if (!master) PickupCatalog.FindPickupIndex(WeightedMealItemDefs[Random.Range(0, WeightedMealItemDefs.Count)].itemIndex);
 
-            foreach (ItemDef itemDef in RunMealItemDefs)
-            {
-                PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(itemDef.itemIndex);
-                if (userProfile.HasDiscoveredPickup(pickupIndex)) localMealItems.Add(pickupIndex);
-            }
+        HG.ListPool<PickupIndex>.RentCollection(out List<PickupIndex> localMealItems);
+        UserProfile userProfile = master.playerCharacterMasterController?.networkUser?.localUser?.userProfile;
 
-            if (localMealItems.Count > 0)
-            {
-                return localMealItems[UnityEngine.Random.Range(0, localMealItems.Count)];
-            }
-            else
-            {
-                return PickupCatalog.FindPickupIndex(ItemCatalog.GetItemDef(RoR2Content.Items.ExtraLifeConsumed.itemIndex).itemIndex);
-            }
-        }
-        else
+        foreach (ItemDef itemDef in WeightedMealItemDefs)
         {
-            return PickupCatalog.FindPickupIndex(RunMealItemDefs[UnityEngine.Random.Range(0, RunMealItemDefs.Count)].itemIndex);
+            PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(itemDef.itemIndex);
+            if (userProfile.HasDiscoveredPickup(pickupIndex)) localMealItems.Add(pickupIndex);
         }
+
+        return localMealItems.Count > 0 ? localMealItems[Random.Range(0, localMealItems.Count)] : PickupCatalog.FindPickupIndex(RoR2Content.Items.ExtraLifeConsumed.itemIndex);
     }
 
     public override void OnEnter()
