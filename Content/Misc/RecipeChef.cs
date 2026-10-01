@@ -23,7 +23,7 @@ public class RecipeCatalogChef
     {
         RecipeString recipe = new()
         {
-            craftableDef = new(),
+            craftableDef = UnityEngine.ScriptableObject.CreateInstance<CraftableDef>(),
             inputOne = inputOne,
             inputTwo = inputTwo,
             output = output,
@@ -72,6 +72,9 @@ public class RecipeCatalogChef
                     new() { pickup = inputTwoItem ? inputTwoItem : inputTwoEquip }
                 ]
             };
+
+            if (inputOneItem) inputOneItem.tags.Append(ItemTag.FoodRelated);
+            if (inputTwoItem) inputTwoItem.tags.Append(ItemTag.FoodRelated);
 
             craftableDef.pickup = outputItem;
             craftableDef.recipes = [recipe];

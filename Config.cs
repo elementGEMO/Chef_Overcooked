@@ -43,6 +43,12 @@ public static class PluginConfig
     public static ConfigEntry<float> Kebab_Lem_Damage;
     public static ConfigEntry<int> Kebab_Lem_Cap;
 
+    // Goleme Essence with a Twist
+    public static ConfigEntry<float> Golem_Percent_Barrier;
+    public static ConfigEntry<float> Golem_Flat_Barrier;
+    public static ConfigEntry<float> Golem_Base_Armor;
+    public static ConfigEntry<float> Golem_Stack_Armor;
+
     public static void Init()
     {
         GeneralInit();
@@ -114,7 +120,7 @@ public static class PluginConfig
     }
     private static void ItemInit()
     {
-        string clawsToken = "Item - Primitive Claws";
+        string clawsToken = "Item - Primitive Claws";   // Primitive Claws Configs
 
         Claw_Base_Bleed = ChefOverCookedPlugin.Instance.Config.Bind(
             clawsToken, "Bleed Chance", 5f,
@@ -136,7 +142,7 @@ public static class PluginConfig
             "[ # of Max Buffs added per single item stack ]"
         ).PostConfig(MathProcess.Max, 0);
 
-        string kebabToken = "Item - Grilled Lizard Kebab";
+        string kebabToken = "Item - Grilled Lizard Kebab";  // Grilled Lizard Kebab Configs
 
         Kebab_Base_Damage = ChefOverCookedPlugin.Instance.Config.Bind(
             kebabToken, "Base Damage", 30f,
@@ -149,13 +155,35 @@ public static class PluginConfig
         ).PostConfig(MathProcess.Max, 0);
 
         Kebab_Lem_Damage = ChefOverCookedPlugin.Instance.Config.Bind(
-            kebabToken, "Lemurian Damage Inherit", 200f,
+            kebabToken, "Lemurian Damage Inherit", 500f,
             "[ #% Damage Inherited for the Lemurian ]"
         ).PostConfig(MathProcess.Max, 0);
 
         Kebab_Lem_Cap = ChefOverCookedPlugin.Instance.Config.Bind(
             kebabToken, "Lemurian Cap", 1,
             "[ # of Lemurians that can spawn ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        string golemToken = "Item - Golem Essence with a Twist";  // Golem Essence Twist Configs
+
+        Golem_Percent_Barrier = ChefOverCookedPlugin.Instance.Config.Bind(
+            golemToken, "Percent Barrier Gain", 30f,
+            "[ #% Temporary Barrier gained on Item pickups ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Golem_Flat_Barrier = ChefOverCookedPlugin.Instance.Config.Bind(
+            golemToken, "Flat Barrier Gain", 30f,
+            "[ # Temporary Barrier gained on Collectible pickups ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Golem_Base_Armor = ChefOverCookedPlugin.Instance.Config.Bind(
+            golemToken, "Base Armor", 40f,
+            "[ # Armor increased ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Golem_Stack_Armor = ChefOverCookedPlugin.Instance.Config.Bind(
+            golemToken, "Lemurian Cap", 20f,
+            "[ # Armor per Item stack ]"
         ).PostConfig(MathProcess.Max, 0);
     }
     public enum MathProcess

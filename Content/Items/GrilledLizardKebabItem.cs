@@ -52,7 +52,7 @@ public class GrilledLizardKebabItem : ItemBase
 
         if (lemurianAI)
         {
-            lemurianAI.copyLeaderTarget = true;
+            lemurianAI.xrayVision = true;
             lemurianAI.aimVectorMaxSpeed = 200f;
             lemurianAI.aimVectorDampTime = 0.05f;
         }

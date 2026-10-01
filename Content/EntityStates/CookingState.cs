@@ -16,7 +16,7 @@ public class CookingState : GenericCharacterMain
         // Dumb function to average the tiers numerically to add a weighted randomness from the recipe
         public int GetFrequency()
         {
-            if (itemDef.tier != ItemTier.FoodTier) return NumFromTier(PickupCatalog.FindPickupIndex(itemDef.itemIndex));
+            if (itemDef.tier != ItemTier.FoodTier) return (int) Mathf.Pow(NumFromTier(PickupCatalog.FindPickupIndex(itemDef.itemIndex)), 1f / Mathf.Log10(4));
 
             CraftableCatalog.RecipeEntry[] recipeRelation = CraftableCatalog.FindAllRelatedRecipes(PickupCatalog.FindPickupIndex(itemDef.itemIndex));
             float avgFrequency = 0;
@@ -25,7 +25,7 @@ public class CookingState : GenericCharacterMain
             {
                 foreach (PickupIndex pickupIndex in recipe.GetAllPickups())
                 {
-                    avgFrequency = avgFrequency == 0 ? avgFrequency + NumFromTier(pickupIndex) : NumFromTier(pickupIndex);
+                    avgFrequency = avgFrequency == 0 ? NumFromTier(pickupIndex) : (avgFrequency + NumFromTier(pickupIndex)) / 2;
                 }
             }
 
