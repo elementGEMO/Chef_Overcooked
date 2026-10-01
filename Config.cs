@@ -182,7 +182,7 @@ public static class PluginConfig
         ).PostConfig(MathProcess.Max, 0);
 
         Golem_Stack_Armor = ChefOverCookedPlugin.Instance.Config.Bind(
-            golemToken, "Lemurian Cap", 20f,
+            golemToken, "Armor per Stack", 20f,
             "[ # Armor per Item stack ]"
         ).PostConfig(MathProcess.Max, 0);
     }
