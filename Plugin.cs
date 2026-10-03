@@ -23,7 +23,7 @@ namespace ChefOvercooked
         public const string PluginGUID = PluginCreator + "." + PluginName;
         public const string PluginCreator = "noodleGemo";
         public const string PluginName = "Chef_Overcooked";
-        public const string PluginVersion = "1.0.0";
+        public const string PluginVersion = "1.0.1";
 
         public static ExpansionDef AlloyedCollective { get; private set; }
         public static ChefOverCookedPlugin Instance { get; private set; }
@@ -66,6 +66,7 @@ namespace ChefOvercooked
             new GrilledLizardKebabItem();
             new GolemEssenceTwistItem();
             new GlowingJellyPastaItem();
+            //new BloodCandiedEyeItem();
         }
         private void CreateBuffs()
         {

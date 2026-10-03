@@ -281,9 +281,24 @@ public class CookDamageType
         public override void Begin()
         {
             chefBody = target.healthComponent ? target.healthComponent.body : null;
-            orbEffectPrefab = MeatEffect;
-            travelDuration *= UnityEngine.Random.Range(1f, 1.5f);
-            base.Begin();
+            duration = UnityEngine.Random.Range(1f, 1.5f);
+
+            if (target || orbEffectTargetObjectOverride)
+            {
+                EffectData effectData = new()
+                {
+                    origin = origin,
+                    genericFloat = duration,
+                    genericUInt = Util.IntToUintPlusOne((int)itemIndex)
+                };
+
+                if (orbEffectTargetObjectOverride)
+                    effectData.SetNetworkedObjectReference(orbEffectTargetObjectOverride.gameObject);
+                else
+                    effectData.SetHurtBoxReference(target);
+
+                EffectManager.SpawnEffect(MeatEffect, effectData, true);
+            }
         }
         public override void OnArrival()
         {
