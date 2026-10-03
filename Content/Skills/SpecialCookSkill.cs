@@ -17,7 +17,7 @@ public class SpecialCookSkill : SkillBase
 
     protected override string DisplaySkillName  => "Cook";
     protected override string SkillDescription => string.Format(
-        "Stunning".Style(FontColor.cIsDamage) + ". Rapidly " + "Cleave ".Style(FontColor.cIsDamage) + "enemies for " + "{0}x{1}% damage".Style(FontColor.cIsDamage) + ". Slain enemies become already discovered " + "temporary food items".Style(FontColor.cIsUtility) + ".",
+        "Stunning".Style(FontColor.cIsDamage) + ". Rapidly " + "Cleave ".Style(FontColor.cIsDamage) + "enemies for " + "{0}x{1}% damage".Style(FontColor.cIsDamage) + ". Slain enemies become already discovered " + "temporary Meal items".Style(FontColor.cIsUtility) + ".",
         PluginConfig.Attack_Instances.Value, PluginConfig.Damage_Coefficient.Value
     );
 

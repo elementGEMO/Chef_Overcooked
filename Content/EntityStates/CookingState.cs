@@ -133,15 +133,15 @@ public class CookingState : GenericCharacterMain
     }
     private PickupIndex RandomPickupIndex(CharacterMaster master = null)
     {
-        if (!master) PickupCatalog.FindPickupIndex(WeightedMealItemDefs[Random.Range(0, WeightedMealItemDefs.Count)].itemIndex);
+        if (!master || !characterBody.isPlayerControlled) return PickupCatalog.FindPickupIndex(WeightedMealItemDefs[Random.Range(0, WeightedMealItemDefs.Count)].itemIndex);
 
         HG.ListPool<PickupIndex>.RentCollection(out List<PickupIndex> localMealItems);
-        UserProfile userProfile = master.playerCharacterMasterController?.networkUser?.localUser?.userProfile;
+        UserProfile userProfile = master.playerCharacterMasterController.networkUser?.localUser?.userProfile;
 
         foreach (ItemDef itemDef in WeightedMealItemDefs)
         {
             PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(itemDef.itemIndex);
-            if (userProfile.HasDiscoveredPickup(pickupIndex)) localMealItems.Add(pickupIndex);
+            if (userProfile != null && userProfile.HasDiscoveredPickup(pickupIndex)) localMealItems.Add(pickupIndex);
         }
 
         return localMealItems.Count > 0 ? localMealItems[Random.Range(0, localMealItems.Count)] : PickupCatalog.FindPickupIndex(RoR2Content.Items.ExtraLifeConsumed.itemIndex);
@@ -206,6 +206,9 @@ public class CookingState : GenericCharacterMain
     public override void FixedUpdate()
     {
         base.FixedUpdate();
+
+        // Aborts State early if there is no Monster Meat
+        if (characterBody.inventory && characterBody.inventory.GetItemCountEffective(MonsterMeatItem.ItemDef) <= 0) outer.SetNextStateToMain();
 
         if (!hasPlayedAnim)
         {

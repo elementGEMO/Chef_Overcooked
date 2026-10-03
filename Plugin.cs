@@ -65,6 +65,7 @@ namespace ChefOvercooked
             new MonsterMeatItem();
             new GrilledLizardKebabItem();
             new GolemEssenceTwistItem();
+            new GlowingJellyPastaItem();
         }
         private void CreateBuffs()
         {

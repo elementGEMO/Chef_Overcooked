@@ -47,7 +47,7 @@ public class GrilledLizardKebabItem : ItemBase
     }
     private GameObject CreateLemurianMaster()
     {
-        GameObject masterPrefab = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<GameObject>(RoR2_CU8_LemurianEgg.DevotedLemurianMaster_prefab).WaitForCompletion();
+        GameObject masterPrefab = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<GameObject>(RoR2_CU8_LemurianEgg.DevotedLemurianMaster_prefab).WaitForCompletion().InstantiateClone("SpectralLemurian");
         BaseAI lemurianAI       = masterPrefab ? masterPrefab.GetComponent<BaseAI>() : null;
 
         if (lemurianAI)

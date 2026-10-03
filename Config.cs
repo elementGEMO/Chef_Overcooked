@@ -43,11 +43,17 @@ public static class PluginConfig
     public static ConfigEntry<float> Kebab_Lem_Damage;
     public static ConfigEntry<int> Kebab_Lem_Cap;
 
-    // Goleme Essence with a Twist
+    // Golem Essence with a Twist
     public static ConfigEntry<float> Golem_Percent_Barrier;
     public static ConfigEntry<float> Golem_Flat_Barrier;
     public static ConfigEntry<float> Golem_Base_Armor;
     public static ConfigEntry<float> Golem_Stack_Armor;
+
+    // Glowing Jelly Pasta
+    public static ConfigEntry<float> Jelly_Cooldown_Base;
+    public static ConfigEntry<float> Jelly_Cooldown_Stack;
+    public static ConfigEntry<float> Jelly_Stun_Duration;
+    public static ConfigEntry<float> Jelly_Stun_Range;
 
     public static void Init()
     {
@@ -184,6 +190,28 @@ public static class PluginConfig
         Golem_Stack_Armor = ChefOverCookedPlugin.Instance.Config.Bind(
             golemToken, "Armor per Stack", 20f,
             "[ # Armor per Item stack ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        string jellyToken = "Item - Glowing Jelly Pasta";   // Glowing Jelly Pasta Configs
+
+        Jelly_Cooldown_Base = ChefOverCookedPlugin.Instance.Config.Bind(
+            jellyToken, "Base Cooldown Reduction", 1f,
+            "[ #s Flat Cooldown Reduction ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Jelly_Cooldown_Stack = ChefOverCookedPlugin.Instance.Config.Bind(
+            jellyToken, "Cooldown Reduction per Stack", 0.5f,
+            "[ #s Flat Cooldown Reduction per Item stack ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Jelly_Stun_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
+            jellyToken, "Stun Duration", 3f,
+            "[ #s for the Stun Dration ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Jelly_Stun_Range = ChefOverCookedPlugin.Instance.Config.Bind(
+            jellyToken, "Stun Radius", 25f,
+            "[ #m Stun Radius when Utility Skill is used ]"
         ).PostConfig(MathProcess.Max, 0);
     }
     public enum MathProcess
