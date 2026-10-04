@@ -10,11 +10,9 @@ using RoR2BepInExPack.GameAssetPathsBetter;
 using UnityEngine.Rendering;
 
 namespace ChefOvercooked;
-using static OverlayHelper;
 
 public class DamageOnBleedBuff : BuffBase
 {
-    private static Material ActiveOverlay;
     protected override string Name => "DamageOnBleed";
     public static BuffDef BuffDef;
     protected override Sprite IconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texDamageOnBleed");
@@ -22,35 +20,53 @@ public class DamageOnBleedBuff : BuffBase
     protected override bool IsHidden => false;
     protected override bool IsStackable => true;
 
+    private static Material MatOverlay;
+
     protected override void Initialize()
     {
         BuffDef = Value;
 
-        RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
-        On.RoR2.CharacterBody.AddTimedBuff_BuffDef_float += CharacterBody_AddTimedBuff_BuffDef_float;
-        IL.RoR2.GlobalEventManager.ProcessHitEnemy += GlobalEventManager_ProcessHitEnemy;
-
-        IL.RoR2.CharacterModel.UpdateOverlays += CharacterModel_UpdateOverlays;
-        IL.RoR2.CharacterModel.UpdateOverlayStates += CharacterModel_UpdateOverlayStates;
-
         CreateOverlay();
+
+        RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
+
+        DotController.onDotInflictedServerGlobal += DotController_onDotInflictedServerGlobal;
+        On.RoR2.CharacterBody.AddTimedBuff_BuffDef_float += CharacterBody_AddTimedBuff_BuffDef_float;
+
+        IL.RoR2.CharacterModel.UpdateOverlays += (il) => OverlayHelper.UpdateOverlayHook(new(il), BuffDef, [MatOverlay]);
+        IL.RoR2.CharacterModel.UpdateOverlayStates += (il) => OverlayHelper.UpdateOverlayStateHook(new(il), BuffDef);
     }
+
     private void CreateOverlay()
     {
-        Texture2D tempRamp  = Addressables.LoadAssetAsync<Texture2D>(RoR2_Base_Common_ColorRamps.texRampDroneFire_png).WaitForCompletion();
-        ActiveOverlay       = new(Addressables.LoadAssetAsync<Material>(RoR2_DLC2_Chef_Buffs.matChefOiledDebuffOverlay_mat).WaitForCompletion());
+        Texture2D tempRamp = Addressables.LoadAssetAsync<Texture2D>(RoR2_Base_Common_ColorRamps.texRampDroneFire_png).WaitForCompletion();
+        MatOverlay = new(Addressables.LoadAssetAsync<Material>(RoR2_DLC2_Chef_Buffs.matChefOiledDebuffOverlay_mat).WaitForCompletion());
 
-        ActiveOverlay.SetInt("_SrcBlend", (int) BlendMode.One);
-        ActiveOverlay.SetInt("_DstBlend", (int) BlendMode.One);
+        MatOverlay.SetInt("_SrcBlend", (int)BlendMode.One);
+        MatOverlay.SetInt("_DstBlend", (int)BlendMode.One);
 
-        ActiveOverlay.SetFloat("_FresnelPower", 0.8f);
-        ActiveOverlay.SetFloat("_AlphaBoost", 0.5f);
-        ActiveOverlay.SetFloat("_AlphaBias", 1f);
+        MatOverlay.SetFloat("_FresnelPower", 0.8f);
+        MatOverlay.SetFloat("_AlphaBoost", 0.5f);
+        MatOverlay.SetFloat("_AlphaBias", 1f);
 
-        ActiveOverlay.SetColor("_TintColor", new Color(1, 0.439f, 0));
-        ActiveOverlay.SetTexture("_RemapTex", tempRamp);
+        MatOverlay.SetColor("_TintColor", new Color(1, 0.439f, 0));
+        MatOverlay.SetTexture("_RemapTex", tempRamp);
     }
+    private void DotController_onDotInflictedServerGlobal(DotController dotController, ref InflictDotInfo inflictDotInfo)
+    {
+        if (inflictDotInfo.dotIndex != DotController.DotIndex.Bleed && inflictDotInfo.dotIndex != DotController.DotIndex.SuperBleed) return;
 
+        if (inflictDotInfo.attackerObject)
+        {
+            GameObject attackerObject   = inflictDotInfo.attackerObject;
+            CharacterBody attackerBody  = attackerObject.GetComponent<CharacterBody>();
+            Inventory inventory         = attackerBody ? attackerBody.inventory : null;
+            int itemCount               = inventory ? inventory.GetItemCountEffective(PrimitiveClawsItem.ItemDef) : 0;
+
+            if (itemCount > 0)
+                attackerBody.AddTimedBuff(BuffDef, inflictDotInfo.duration);
+        }
+    }
     private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
     {
         args.baseDamageAdd += sender.GetBuffCount(BuffDef) * PluginConfig.Claw_Damage_Stack.Value / 100f;
@@ -100,91 +116,5 @@ public class DamageOnBleedBuff : BuffBase
         {
             orig(self, buffDef, duration);
         }
-    }
-
-    private void GlobalEventManager_ProcessHitEnemy(ILContext il)
-    {
-        ILCursor cursor = new(il);
-
-        if (cursor.TryGotoNext(
-            x => x.MatchLdfld(typeof(DamageInfo), nameof(DamageInfo.procCoefficient)),
-            x => x.MatchLdloc(out _),
-            x => x.MatchCallvirt(typeof(CharacterBody), "get_bleedChance")
-        ))
-        {
-            if (cursor.TryGotoNext(
-                x => x.MatchLdarg(1),
-                x => x.MatchLdfld(typeof(DamageInfo), nameof(DamageInfo.procChainMask)),
-                x => x.MatchStloc(out _)
-            ))
-            {
-                cursor.MoveAfterLabels();
-                cursor.Emit(OpCodes.Ldarg_1);
-
-                cursor.EmitDelegate<Action<DamageInfo>>(report =>
-                {
-                    CharacterBody attackerBody = report.attacker ? report.attacker.GetComponent<CharacterBody>() : null;
-                    int itemCount = attackerBody.inventory ? attackerBody.inventory.GetItemCountEffective(PrimitiveClawsItem.ItemDef) : 0;
-
-                    if (itemCount > 0) attackerBody.AddTimedBuff(BuffDef, 3f * report.procCoefficient);
-                });
-            }
-            else Log.Error(BuffDef.name + "_PROCESSHITENEMY failed to ILHook #2");
-        }
-        else Log.Error(BuffDef.name + "_PROCESSHITENEMY failed to ILHook #1");
-    }
-    private void CharacterModel_UpdateOverlays(ILContext il)
-    {
-        ILCursor cursor = new(il);
-
-        if (cursor.TryGotoNext(
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld(typeof(CharacterModel), nameof(CharacterModel.body)),
-            x => x.MatchLdsfld(typeof(RoR2Content.Buffs), nameof(RoR2Content.Buffs.ClayGoo))
-        ))
-        {
-            cursor.MoveAfterLabels();
-            cursor.Emit(OpCodes.Ldarg_0);
-
-            cursor.EmitDelegate<Action<CharacterModel>>(model =>
-            {
-                if (model.body.GetBuffCount(BuffDef) > 0)
-                {
-                    AddOverlay(model, ActiveOverlay);
-                }
-            });
-        }
-        else Log.Error(BuffDef.name + "_UPDATEOVERLAYS failed to ILHook");
-    }
-    private void CharacterModel_UpdateOverlayStates(ILContext il)
-    {
-        ILCursor cursor = new(il);
-        int incrementIndex = -1;
-
-        if (cursor.TryGotoNext(
-            x => x.MatchLdcI4(0),
-            x => x.MatchStloc(out incrementIndex),
-            x => x.MatchLdarg(0),
-            x => x.MatchLdloc(incrementIndex)
-        ) && incrementIndex != -1)
-        {
-            if (cursor.TryGotoNext(
-                x => x.MatchLdarg(0),
-                x => x.MatchLdloc(incrementIndex)
-            ))
-            {
-                cursor.Emit(OpCodes.Ldarg_0);
-                cursor.Emit(OpCodes.Ldloc, incrementIndex);
-
-                cursor.EmitDelegate<Func<CharacterModel, int, int>>((model, index) =>
-                {
-                    if (model.body.HasBuff(BuffDef)) model.activeOverlays |= 1 << index;
-                    return index++;
-                });
-
-                cursor.Emit(OpCodes.Stloc, incrementIndex);
-            }
-        }
-        else Log.Error(BuffDef.name + "_UPDATEOVERLAYSTATES failed to ILHook #1");
     }
 }

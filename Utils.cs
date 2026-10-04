@@ -3,6 +3,9 @@ using System;
 using RoR2;
 using R2API;
 using UnityEngine;
+using MonoMod.Cil;
+using Mono.Cecil.Cil;
+using UnityEngine.UIElements;
 
 namespace ChefOvercooked;
 
@@ -104,9 +107,62 @@ internal static class StringHelper
     public static string OptText(this string self, string opt, bool value) => value ? self : opt;
     public static string FuseText(List<string> allStrings) => string.Join("", allStrings);
 }
-internal class OverlayHelper
+internal static class OverlayHelper
 {
-    public static void AddOverlay(CharacterModel model, Material overlayMaterial)
+    public static void UpdateOverlayHook(this ILCursor cursor, BuffDef buffDef, Material[] overlays)
+    {
+        if (cursor.TryGotoNext(
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld(typeof(CharacterModel), nameof(CharacterModel.body)),
+            x => x.MatchLdsfld(typeof(RoR2Content.Buffs), nameof(RoR2Content.Buffs.ClayGoo))
+        ))
+        {
+            cursor.MoveAfterLabels();
+            cursor.Emit(OpCodes.Ldarg_0);
+
+            cursor.EmitDelegate<Action<CharacterModel>>(model =>
+            {
+                if (model.body && model.body.GetBuffCount(buffDef) > 0)
+                {
+                    foreach (Material material in overlays)
+                        AddOverlay(model, material);
+                }
+            });
+        }
+        else Log.Error(string.Format("{0}_UPDATEOVERLAYHOOK failed to ILHook", buffDef.name));
+    }
+
+    public static void UpdateOverlayStateHook(this ILCursor cursor, BuffDef buffDef, int totalOverlays = 1)
+    {
+        int incrementIndex = -1;
+
+        if (cursor.TryGotoNext(
+            x => x.MatchLdcI4(0),
+            x => x.MatchStloc(out incrementIndex),
+            x => x.MatchLdarg(0),
+            x => x.MatchLdloc(incrementIndex)
+        ) && incrementIndex != -1)
+        {
+            if (cursor.TryGotoNext(
+                x => x.MatchLdarg(0),
+                x => x.MatchLdloc(incrementIndex)
+            ))
+            {
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.Emit(OpCodes.Ldloc, incrementIndex);
+
+                cursor.EmitDelegate<Func<CharacterModel, int, int>>((model, index) =>
+                {
+                    if (model.body.HasBuff(buffDef)) model.activeOverlays |= totalOverlays << index;
+                    return index++;
+                });
+
+                cursor.Emit(OpCodes.Stloc, incrementIndex);
+            }
+        }
+        else Log.Error(string.Format("{0}_UPDATEOVERLAYSTATES failed to ILHook", buffDef.name));
+    }
+    private static void AddOverlay(CharacterModel model, Material overlayMaterial)
     {
         if (model.activeOverlayCount >= CharacterModel.maxOverlays || !overlayMaterial) return;
 

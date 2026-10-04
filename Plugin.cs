@@ -16,6 +16,7 @@ namespace ChefOvercooked
     [BepInDependency(PrefabAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(LanguageAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(RecalculateStatsAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(R2API.Networking.NetworkingAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
 
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     public class ChefOverCookedPlugin : BaseUnityPlugin
@@ -66,7 +67,7 @@ namespace ChefOvercooked
             new GrilledLizardKebabItem();
             new GolemEssenceTwistItem();
             new GlowingJellyPastaItem();
-            //new BloodCandiedEyeItem();
+            new BloodCandiedEyeItem();
         }
         private void CreateBuffs()
         {
