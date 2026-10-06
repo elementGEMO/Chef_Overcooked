@@ -220,7 +220,7 @@ public static class PluginConfig
             "[ #m Stun Radius when Utility Skill is used ]"
         ).PostConfig(MathProcess.Max, 0);
 
-        string eyeToken = "Item - Glowing Jelly Pasta";   // Blood Candied Eye
+        string eyeToken = "Item - Blood Candied Eye";   // Blood Candied Eye
 
         Eye_Range_Base = ChefOverCookedPlugin.Instance.Config.Bind(
             eyeToken, "Base Radius", 10f,

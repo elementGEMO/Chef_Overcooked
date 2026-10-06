@@ -24,7 +24,7 @@ namespace ChefOvercooked
         public const string PluginGUID = PluginCreator + "." + PluginName;
         public const string PluginCreator = "noodleGemo";
         public const string PluginName = "Chef_Overcooked";
-        public const string PluginVersion = "1.1.0";
+        public const string PluginVersion = "1.1.1";
 
         public static ExpansionDef AlloyedCollective { get; private set; }
         public static ChefOverCookedPlugin Instance { get; private set; }
