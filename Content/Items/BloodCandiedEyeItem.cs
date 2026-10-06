@@ -1,16 +1,14 @@
 ﻿using R2API;
+using R2API.Networking;
 using R2API.Networking.Interfaces;
 using RoR2;
 using RoR2.Items;
 using RoR2.Projectile;
 using RoR2BepInExPack.GameAssetPaths.Version_1_35_0;
-using System;
 using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.Networking;
-using UnityEngine.UIElements;
 
 namespace ChefOvercooked;
 using static StringHelper;
@@ -26,15 +24,18 @@ public class BloodCandiedEyeItem : ItemBase
         ItemTag.CanBeTemporary
     ];
 
-    protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("grilledLizardKebabModel");
-    //protected override Sprite PickupIconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texGrilledLizardKebabIcon");
+    protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("bloodCandiedEyeModel");
+    protected override Sprite PickupIconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texBloodCandiedEyeIcon");
     protected override string PickupText => "Nearby enemies bleed, and projectiled are slowed. Sweet and crunchy.";
     protected override string Description => FuseText([
-        "Within " + "10m".Style(FontColor.cIsUtility) + " (+3m per stack)".Style(FontColor.cStack) + ", ",
+        string.Format("Within " + "{0}m".Style(FontColor.cIsUtility) + " ({1}m per stack)".Style(FontColor.cStack).OptText(PluginConfig.Eye_Range_Stack.Value > 0) + ", ",
+            RoundVal(PluginConfig.Eye_Range_Base.Value), RoundVal(PluginConfig.Eye_Range_Stack.Value).SignVal()),
 
-        "enemies start " + "bleeding ".Style(FontColor.cIsDamage) + "for " + "500% ".Style(FontColor.cIsDamage) + "base damage ",
+        string.Format("enemies start " + "bleeding ".Style(FontColor.cIsDamage) + "for " + "{0}% ".Style(FontColor.cIsDamage) + "base damage ",
+            RoundVal(PluginConfig.Eye_Bleed_Damage.Value)),
 
-        "and projectiles are " + "slowed down ".Style(FontColor.cIsUtility) + "by " + "85%".Style(FontColor.cIsUtility) + "."
+        string.Format("and projectiles are " + "slowed down ".Style(FontColor.cIsUtility) + "by " + "{0}%".Style(FontColor.cIsUtility) + ".",
+            RoundVal(PluginConfig.Eye_Slow_Coefficient.Value))
     ]);
     protected override string DisplayName => "Blood Candied Eye";
 
@@ -44,7 +45,8 @@ public class BloodCandiedEyeItem : ItemBase
     {
         ItemDef = Value;
 
-        RecipeCatalogChef.AddRecipe("ScrapWhite", "ScrapWhite", Name);
+        RecipeCatalogChef.AddRecipe("SlowOnHit", PrimitiveClawsItem.ItemDef.name, Name);
+        RecipeCatalogChef.AddRecipe("SlowOnHit", "TeleportOnLowHealth", Name);
 
         CreateEffect();
     }
@@ -117,7 +119,7 @@ public class BloodCandiedEyeItem : ItemBase
 
 public class BloodCandiedEyeBehavior : BaseItemBodyBehavior
 {
-    [ItemDefAssociation(useOnServer = true, useOnClient = false)]
+    [ItemDefAssociation(useOnServer = true, useOnClient = true)]
     public static ItemDef GetItemDef() => BloodCandiedEyeItem.ItemDef;
 
     private GameObject slowField;
@@ -141,49 +143,49 @@ public class BloodCandiedEyeBehavior : BaseItemBodyBehavior
     {
         if (!characterMaster && !body.inventory) return;
 
-        HG.ListPool<HurtBox>.RentCollection(out List<HurtBox> hurtBoxList);
-
-        float itemRadius = 10f + 3f * (body.inventory.GetItemCountEffective(BloodCandiedEyeItem.ItemDef) - 1);
+        float itemRadius = PluginConfig.Eye_Range_Base.Value + PluginConfig.Eye_Range_Stack.Value * (body.inventory.GetItemCountEffective(BloodCandiedEyeItem.ItemDef) - 1);
         float smoothScale = Mathf.SmoothDamp(collision.radius, itemRadius, ref currentVelocity, 0.5f);
 
-        collision.radius = smoothScale;
-        areaVisual.localScale = Vector3.one * smoothScale;
+        UpdateVisual(smoothScale, Vector3.one);
 
-        SphereSearch radiusSearch = new()
+        if (NetworkServer.active)
         {
-            radius = smoothScale,
-            origin = body.corePosition,
-            mask = LayerIndex.entityPrecise.mask,
-            queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
-        };
+            HG.ListPool<HurtBox>.RentCollection(out List<HurtBox> hurtBoxList);
 
-        radiusSearch.RefreshCandidates();
-        radiusSearch.FilterCandidatesByHurtBoxTeam(TeamMask.GetEnemyTeams(characterMaster.teamIndex));
-        radiusSearch.FilterCandidatesByDistinctHurtBoxEntities();
-        radiusSearch.OrderCandidatesByDistance();
-        radiusSearch.GetHurtBoxes(hurtBoxList);
-        radiusSearch.ClearCandidates();
+            SphereSearch radiusSearch = new()
+            {
+                radius = smoothScale,
+                origin = body.corePosition,
+                mask = LayerIndex.entityPrecise.mask,
+                queryTriggerInteraction = QueryTriggerInteraction.UseGlobal
+            };
 
-        foreach (HurtBox hurtBox in hurtBoxList)
-        {
-            CharacterBody victimBody = hurtBox.healthComponent ? hurtBox.healthComponent.body : null;
+            radiusSearch.RefreshCandidates();
+            radiusSearch.FilterCandidatesByHurtBoxTeam(TeamMask.GetEnemyTeams(characterMaster.teamIndex));
+            radiusSearch.FilterCandidatesByDistinctHurtBoxEntities();
+            radiusSearch.OrderCandidatesByDistance();
+            radiusSearch.GetHurtBoxes(hurtBoxList);
+            radiusSearch.ClearCandidates();
 
-            if (victimBody != null)
-                DotController.InflictDot(victimBody.gameObject, body.gameObject, hurtBox, DotController.DotIndex.Bleed, 1f, 5f *  1f / 2.4f, 1);
+            foreach (HurtBox hurtBox in hurtBoxList)
+            {
+                CharacterBody victimBody = hurtBox.healthComponent ? hurtBox.healthComponent.body : null;
+
+                if (victimBody != null)
+                    DotController.InflictDot(victimBody.gameObject, body.gameObject, hurtBox, DotController.DotIndex.Bleed, 1f, PluginConfig.Eye_Bleed_Damage.Value / 100f * 1f / 2.4f, 1);
+            }
         }
+    }
+    public void UpdateVisual(float radius, Vector3 position, bool updatePos = false)
+    {
+        collision.radius = radius;
+        areaVisual.localScale = Vector3.one * radius;
+
+        if (updatePos)
+            areaVisual.position = position;
     }
     public void OnDisable()
     {
         Destroy(slowField);
-    }
-    public class BloodCandiedEyeSync : INetMessage
-    {
-        NetworkInstanceId NetID;
-        public void OnReceived()
-        {
-            throw new NotImplementedException();
-        }
-        public void Deserialize(NetworkReader reader) => NetID = reader.ReadNetworkId();
-        public void Serialize(NetworkWriter writer) => writer.Write(NetID);
     }
 }

@@ -69,7 +69,7 @@ public class DamageOnBleedBuff : BuffBase
     }
     private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
     {
-        args.baseDamageAdd += sender.GetBuffCount(BuffDef) * PluginConfig.Claw_Damage_Stack.Value / 100f;
+        args.damageMultAdd += sender.GetBuffCount(BuffDef) * PluginConfig.Claw_Damage_Stack.Value / 100f;
     }
     private void CharacterBody_AddTimedBuff_BuffDef_float(On.RoR2.CharacterBody.orig_AddTimedBuff_BuffDef_float orig, CharacterBody self, BuffDef buffDef, float duration)
     {

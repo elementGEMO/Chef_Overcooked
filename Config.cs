@@ -55,6 +55,12 @@ public static class PluginConfig
     public static ConfigEntry<float> Jelly_Stun_Duration;
     public static ConfigEntry<float> Jelly_Stun_Range;
 
+    // Blood Candied Eye
+    public static ConfigEntry<float> Eye_Range_Base;
+    public static ConfigEntry<float> Eye_Range_Stack;
+    public static ConfigEntry<float> Eye_Bleed_Damage;
+    public static ConfigEntry<float> Eye_Slow_Coefficient;
+
     public static void Init()
     {
         GeneralInit();
@@ -212,6 +218,28 @@ public static class PluginConfig
         Jelly_Stun_Range = ChefOverCookedPlugin.Instance.Config.Bind(
             jellyToken, "Stun Radius", 25f,
             "[ #m Stun Radius when Utility Skill is used ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        string eyeToken = "Item - Glowing Jelly Pasta";   // Blood Candied Eye
+
+        Eye_Range_Base = ChefOverCookedPlugin.Instance.Config.Bind(
+            eyeToken, "Base Radius", 10f,
+            "[ #m Radius for enemies and projectiles ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Eye_Range_Stack = ChefOverCookedPlugin.Instance.Config.Bind(
+            eyeToken, "Radius per Stack", 5f,
+            "[ #m Radius per Item Stack for enemies and projectiles ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Eye_Bleed_Damage = ChefOverCookedPlugin.Instance.Config.Bind(
+            eyeToken, "Bleed Damage Percent", 500f,
+            "[ #% Base Damage to Bleed Damage ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Eye_Slow_Coefficient = ChefOverCookedPlugin.Instance.Config.Bind(
+            eyeToken, "Slow Down Coefficient", 80f,
+            "[ #% Slowed Down to projectiles within the Radius ]"
         ).PostConfig(MathProcess.Max, 0);
     }
     public enum MathProcess

@@ -44,6 +44,12 @@ public class SpectralBuff : BuffBase
     {
         orig(self);
 
-        if (self.body.HasBuff(BuffDef)) self.visibility = VisibilityLevel.Revealed;
+        if (self.body)
+        {
+            if (self.body.HasBuff(BuffDef) && self.visibility != VisibilityLevel.Invisible)
+                self.visibility = VisibilityLevel.Revealed;
+        }
+
+        //if (self.body.HasBuff(BuffDef)) self.visibility = VisibilityLevel.Revealed;
     }
 }
