@@ -10,7 +10,6 @@ using System.Collections.Generic;
 namespace ChefOvercooked;
 public abstract class SkillBase : GenericBase<SkillDef>
 {
-
     protected virtual string DisplaySkillName   => null;
     protected virtual string SkillDescription   => null;
     protected virtual Sprite SkillSprite        => null;
@@ -61,5 +60,17 @@ public abstract class SkillBase : GenericBase<SkillDef>
 
         ContentAddition.AddSkillDef(Value);
     }
-    protected virtual void LogDisplay() { }
+    protected virtual UnlockableDef UnlockDef(Sprite unlockIcon, string unlockName, string internalName)
+    {
+        UnlockableDef skillUnlock = ScriptableObject.CreateInstance<UnlockableDef>();
+        (skillUnlock as ScriptableObject).name = internalName;
+        skillUnlock.nameToken = HelperLanguage.LanguageAdd("WELLSEASONED_UNLOCK", unlockName);
+        skillUnlock.cachedName = Name + "_Unlock";
+        skillUnlock.achievementIcon = unlockIcon;
+        skillUnlock.hidden = false;
+
+        ContentAddition.AddUnlockableDef(skillUnlock);
+
+        return skillUnlock;
+    }
 }

@@ -2,6 +2,8 @@
 using RoR2;
 using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine.Networking;
+using RoR2.Stats;
 
 namespace ChefOvercooked;
 public class CookingState : GenericCharacterMain
@@ -131,20 +133,32 @@ public class CookingState : GenericCharacterMain
             for (int i = 0; i < item.GetFrequency(); i++) WeightedMealItemDefs.Add(item.itemDef);
         }
     }
-    private PickupIndex RandomPickupIndex(CharacterMaster master = null)
+    private PickupIndex RandomPickupIndex()
     {
-        if (!master || !characterBody.isPlayerControlled) return PickupCatalog.FindPickupIndex(WeightedMealItemDefs[Random.Range(0, WeightedMealItemDefs.Count)].itemIndex);
+        return WeightedMealItemDefs.Count > 0 ? PickupCatalog.FindPickupIndex(WeightedMealItemDefs[Random.Range(0, WeightedMealItemDefs.Count)].itemIndex) : PickupCatalog.FindPickupIndex(RoR2Content.Items.ExtraLifeConsumed.itemIndex);
+
+        /*
+        // Set paramter as CharacterBody characterBody = null
+        
+        PlayerStatsComponent playerStats    = characterBody ? PlayerStatsComponent.FindBodyStatsComponent(characterBody) : null;
+        NetworkUser playerUser              = playerStats.playerCharacterMasterController ? playerStats.playerCharacterMasterController.networkUser : null;
+        UserProfile playerProfile           = playerUser ? playerUser.localUser.userProfile : null;
+
+        if (characterBody == null || playerProfile == null)
+            return PickupCatalog.FindPickupIndex(WeightedMealItemDefs[Random.Range(0, WeightedMealItemDefs.Count)].itemIndex);
 
         HG.ListPool<PickupIndex>.RentCollection(out List<PickupIndex> localMealItems);
-        UserProfile userProfile = master.playerCharacterMasterController.networkUser?.localUser?.userProfile;
 
         foreach (ItemDef itemDef in WeightedMealItemDefs)
         {
             PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(itemDef.itemIndex);
-            if (userProfile != null && userProfile.HasDiscoveredPickup(pickupIndex)) localMealItems.Add(pickupIndex);
-        }
 
-        return localMealItems.Count > 0 ? localMealItems[Random.Range(0, localMealItems.Count)] : PickupCatalog.FindPickupIndex(RoR2Content.Items.ExtraLifeConsumed.itemIndex);
+            if (playerProfile.HasDiscoveredPickup(pickupIndex))
+                localMealItems.Add(pickupIndex);
+        }
+        */
+
+        //return localMealItems.Count > 0 ? localMealItems[Random.Range(0, localMealItems.Count)] : PickupCatalog.FindPickupIndex(RoR2Content.Items.ExtraLifeConsumed.itemIndex);
     }
 
     public override void OnEnter()
@@ -156,21 +170,21 @@ public class CookingState : GenericCharacterMain
     }
     public override void OnExit()
     {
+        if (!NetworkServer.active) return;
+
         Inventory inventory = characterBody.inventory;
         int itemCount       = inventory.GetItemCountEffective(MonsterMeatItem.ItemDef);
 
         if (characterBody.isPlayerControlled)
         {
-            Vector3 modelDirection = GetModelTransform().forward;
-
             for (int i = 0; i < itemCount; i++)
             {
-                Vector3 vectorForce = modelDirection * (i + 10);
+                Vector3 vectorForce = GetModelTransform().forward * (i + 10);
                 vectorForce = new(vectorForce.x, 12 + (i * 2), vectorForce.z);
 
                 UniquePickup randomPickup = new()
                 {
-                    pickupIndex = RandomPickupIndex(characterBody.master),
+                    pickupIndex = RandomPickupIndex(),
                     decayValue = PluginConfig.Temp_Duration.Value
                 };
 
@@ -226,6 +240,10 @@ public class CookingState : GenericCharacterMain
         {
             outer.SetNextStateToMain();
         }
+    }
+    public override void OnSerialize(NetworkWriter writer)
+    {
+        base.OnSerialize(writer);
     }
     public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Death;
 }

@@ -6,6 +6,7 @@ using R2API;
 using EntityStates;
 using BepInEx.Configuration;
 using R2API.Utils;
+using RoR2;
 
 namespace ChefOvercooked;
 using static HelperFontColor;
@@ -13,11 +14,12 @@ using static HelperLanguage;
 public class SpecialCookSkill : SkillBase
 {
     public static SkillDef SkillDef;
+    public static UnlockableDef UnlockableDef;
     protected override string Name => "CookSkill";
 
     protected override string DisplaySkillName  => "Cook";
     protected override string SkillDescription => string.Format(
-        "Stunning".Style(FontColor.cIsDamage) + ". Rapidly " + "Cleave ".Style(FontColor.cIsDamage) + "enemies for " + "{0}x{1}% damage".Style(FontColor.cIsDamage) + ". Slain enemies become already discovered " + "temporary Meal items".Style(FontColor.cIsUtility) + ".",
+        "Stunning".Style(FontColor.cIsDamage) + ". Rapidly " + "Cleave ".Style(FontColor.cIsDamage) + "enemies for " + "{0}x{1}% damage".Style(FontColor.cIsDamage) + ". Slain enemies become " + "temporary Meal items".Style(FontColor.cIsUtility) + ".",
         PluginConfig.Attack_Instances.Value, PluginConfig.Damage_Coefficient.Value
     );
 
@@ -44,6 +46,8 @@ public class SpecialCookSkill : SkillBase
     {
         SkillDef = Value;
 
+        UnlockableDef = UnlockDef(SkillSprite, "Well Seasoned", "Skills.Chef.Cook");
+
         SkillDef.keywordTokens = [
             "KEYWORD_STUNNING",
             LanguageAdd(
@@ -56,6 +60,6 @@ public class SpecialCookSkill : SkillBase
         ContentAddition.AddEntityState(typeof(CookingState), out _);
 
         SkillFamily chefSpecialFamily = Addressables.LoadAssetAsync<SkillFamily>(RoR2_DLC2_Chef.ChefSpecialFamily_asset).WaitForCompletion();
-        HG.ArrayUtils.ArrayAppend(ref chefSpecialFamily.variants, new SkillFamily.Variant { skillDef = SkillDef });
+        HG.ArrayUtils.ArrayAppend(ref chefSpecialFamily.variants, new SkillFamily.Variant { unlockableDef = UnlockableDef, skillDef = SkillDef });
     }
 }

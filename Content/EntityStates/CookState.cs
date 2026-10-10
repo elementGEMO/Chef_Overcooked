@@ -143,7 +143,7 @@ public class CookState : GenericCharacterMain
             procCoefficient = PluginConfig.Proc_Coefficient.Value,
             baseDamage = damageStat * PluginConfig.Damage_Coefficient.Value / 100,
             damageColorIndex = DamageColorIndex.Default,
-            damageType = new DamageTypeCombo(DamageType.Stun1s, DamageTypeExtended.ChefSource, DamageSource.Special),
+            damageType = new DamageTypeCombo(DamageType.Stun1s, DamageTypeExtended.Generic, DamageSource.Special),
             crit = isCrit,
             falloffModel = BlastAttack.FalloffModel.None,
             impactEffect = sliceImpact.effectIndex
