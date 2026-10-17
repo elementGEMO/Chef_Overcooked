@@ -13,7 +13,6 @@ public class StalkState : GenericCharacterMain
     private static EffectDef StalkEffect;
 
     private HurtBoxGroup characterHurtBoxGroup;
-    private float stalkDuration;
 
     public static void CreateEffects()
     {
@@ -39,28 +38,21 @@ public class StalkState : GenericCharacterMain
     {
         base.OnEnter();
 
-        float fadeDuration = PluginConfig.Stalk_Base_Duration.Value + PluginConfig.Stalk_Duration_Stack.Value * (characterBody.inventory.GetItemCountEffective(WarpingStalkItem.ItemDef) - 1);
-
         characterHurtBoxGroup = characterBody.hurtBoxGroup;
-        stalkDuration = fadeDuration;
         BlinkParticle();
 
         if (characterHurtBoxGroup)
             characterHurtBoxGroup.hurtBoxesDeactivatorCounter++;
-
-        for (int i = 0; i < Mathf.CeilToInt(fadeDuration); i++)
-            characterBody.AddTimedBuff(StalkBuff.BuffDef, fadeDuration / Mathf.CeilToInt(fadeDuration) * i);
     }
     public override void FixedUpdate()
     {
         base.FixedUpdate();
 
-        if (fixedAge >= stalkDuration && isAuthority)
+        if (!characterBody.HasBuff(StalkBuff.BuffDef) && isAuthority)
             outer.SetNextStateToMain();
     }
     public override void OnExit()
     {
-        characterBody.RemoveBuff(StalkBuff.BuffDef);
         BlinkParticle();
 
         if (characterHurtBoxGroup)

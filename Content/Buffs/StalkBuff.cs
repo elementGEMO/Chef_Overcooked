@@ -29,6 +29,14 @@ public class StalkBuff : BuffBase
         IL.RoR2.CharacterModel.UpdateOverlays += (il) => OverlayHelper.UpdateOverlayHook(new(il), BuffDef, [OverlayMat]);
         IL.RoR2.CharacterModel.UpdateOverlayStates += (il) => OverlayHelper.UpdateOverlayStateHook(new(il), BuffDef);
         IL.RoR2.CharacterModel.UpdateRendererMaterials += CharacterModel_UpdateRendererMaterials;
+
+        CharacterBody.onBuffFirstStackGained += CharacterBody_onBuffFirstStackGained;
+    }
+
+    private void CharacterBody_onBuffFirstStackGained(CharacterBody self, BuffDef buff)
+    {
+        if (buff == Value)
+            EntityStateMachine.FindByCustomName(self.gameObject, "Body").SetNextState(new StalkState());
     }
 
     private void CharacterModel_UpdateRendererMaterials(ILContext il)
@@ -64,7 +72,6 @@ public class StalkBuff : BuffBase
         }
         else Log.Error("STALKBUFF_MATERIAL failed to ILHook");
     }
-
     private void CreateOverlay()
     {
         OverlayMat = new(Addressables.LoadAssetAsync<Material>(RoR2_Base_Common.matRevealedEffect_mat).WaitForCompletion());

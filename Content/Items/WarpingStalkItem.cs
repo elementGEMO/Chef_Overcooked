@@ -76,8 +76,8 @@ public class WarpingStalkItem : ItemBase
     private void HealthComponent_TakeDamageProcess(On.RoR2.HealthComponent.orig_TakeDamageProcess orig, HealthComponent self, DamageInfo damageInfo)
     {
         float luck      = (PluginConfig.Stalk_Luck_Affected.Value && self.body.master) ? self.body.master.luck : 0f;
-        bool hasItem    = self.body.inventory ? self.body.inventory.GetItemCountEffective(ItemDef) > 0 : false;
-        bool canStalk   = self.body.master ? Util.CheckRoll(PluginConfig.Stalk_Nullify_Chance.Value, luck, self.body.master) && hasItem : false;
+        int itemCount   = self.body.inventory ? self.body.inventory.GetItemCountEffective(ItemDef): 0;
+        bool canStalk   = self.body.master ? Util.CheckRoll(PluginConfig.Stalk_Nullify_Chance.Value, luck, self.body.master) && itemCount > 0 : false;
 
         if (!self.body.HasBuff(StalkBuff.BuffDef) && canStalk)
         {
@@ -88,7 +88,11 @@ public class WarpingStalkItem : ItemBase
 
             EffectManager.SpawnEffect(NullEffect.prefab, hitEffect, true);
 
-            EntityStateMachine.FindByCustomName(self.body.gameObject, "Body").SetNextState(new StalkState());
+            float baseDuration = PluginConfig.Stalk_Base_Duration.Value + PluginConfig.Stalk_Base_Duration.Value * (itemCount - 1);
+            float procDuration = Mathf.Lerp(Mathf.Max(baseDuration * 0.25f, 1), baseDuration, damageInfo.procCoefficient);
+
+            for (int i = 0; i < Mathf.CeilToInt(procDuration); i++)
+                self.body.AddTimedBuff(StalkBuff.BuffDef, procDuration / Mathf.CeilToInt(procDuration) * i);
         }
         else orig(self, damageInfo);
     }
