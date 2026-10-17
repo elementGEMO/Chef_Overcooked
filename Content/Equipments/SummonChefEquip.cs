@@ -1,9 +1,10 @@
-﻿using R2API;
-using RoR2;
-using RoR2.Projectile;
-using RoR2BepInExPack.GameAssetPaths.Version_1_35_0;
-using UnityEngine;
+﻿using RoR2BepInExPack.GameAssetPaths.Version_1_35_0;
 using UnityEngine.AddressableAssets;
+using RoR2.ExpansionManagement;
+using RoR2.Projectile;
+using UnityEngine;
+using R2API;
+using RoR2;
 
 namespace ChefOvercooked;
 using static StringHelper;
@@ -11,6 +12,7 @@ using static HelperFontColor;
 
 public class SummonChefEquip : EquipmentBase
 {
+    protected override ExpansionDef RequiredExpansion => Addressables.LoadAssetAsync<ExpansionDef>(RoR2_DLC3.DLC3_asset).WaitForCompletion();
     protected override string Name => "SummonChefEquip";
     public static EquipmentDef EquipmentDef;
     protected override float Cooldown => 60f;
@@ -30,7 +32,10 @@ public class SummonChefEquip : EquipmentBase
     protected override void Initialize()
     {
         EquipmentDef = Value;
+
         CreateProjectile();
+
+        RecipeCatalogChef.AddRecipe("ConsumedChefEquip", "ShinyPearl", Name);
     }
     private void CreateProjectile()
     {
@@ -45,6 +50,7 @@ public class SummonChefEquip : EquipmentBase
 
         normal.maxDistance = 2;
         normal.offsetDistance = 1;
+        normal.randomYRotationMax = 360;
 
         GameObject caffeinePrefab   = Addressables.LoadAssetAsync<GameObject>(RoR2_DLC1_VendingMachine.VendingMachine_prefab_e69e4c37).WaitForCompletion().InstantiateClone("Temp");
         Transform terrainOne        = caffeinePrefab.transform.Find("Terrain (1)");
@@ -57,8 +63,14 @@ public class SummonChefEquip : EquipmentBase
     }
     protected override bool ActivateEquip(EquipmentSlot slot)
     {
+        if (SceneCatalog.mostRecentSceneDef == SceneCatalog.GetSceneDefFromSceneName("computationalexchange"))
+            return false;
+
         CharacterBody characterBody = slot.characterBody;
         Ray ray = new(slot.GetAimRay().origin, Vector3.down);
+
+        if (!characterBody)
+            return false;
 
         if (Util.CharacterRaycast(characterBody.gameObject, ray, out RaycastHit rayInfo, 1000f, LayerIndex.world.mask, QueryTriggerInteraction.UseGlobal))
         {
@@ -87,11 +99,18 @@ public class SummonChefEquip : EquipmentBase
 
     private class ChefDeployAdjuster : MonoBehaviour
     {
+        public static GameObject currentChef;
         private static readonly float SPEED_COEFF = 10f;
         private float squashHeightVelocity = 0f;
         private float squashSideVelocity = 0f;
         private float squashTime = 0f;
-        public void Awake() => transform.Rotate(0, Random.Range(-360, 360), 0);
+        public void Awake()
+        {
+            if (currentChef)
+                Destroy(currentChef);
+
+            currentChef = transform.parent.gameObject;
+        }
         public void FixedUpdate()
         {
             float heightSquash = 1f, sideSquash = 1;

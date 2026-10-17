@@ -15,10 +15,13 @@ public class DamageOnBleedBuff : BuffBase
 {
     protected override string Name => "DamageOnBleed";
     public static BuffDef BuffDef;
+
     protected override Sprite IconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texDamageOnBleed");
     protected override Color Color => new (0.910f, 0.506f, 0.239f);
-    protected override bool IsHidden => false;
+
+    protected override bool IgnoreGrowthNectar => false;
     protected override bool IsStackable => true;
+    protected override bool IsHidden => false;
 
     private static Material MatOverlay;
 

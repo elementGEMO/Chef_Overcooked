@@ -116,7 +116,12 @@ public class GrilledLizardKebabBehavior : BaseItemBodyBehavior
     public static ItemDef GetItemDef() => GrilledLizardKebabItem.ItemDef;
     public List<CharacterMaster> spectralLemurians;
 
-    public void OnEnable() => spectralLemurians = [];
+    public void OnEnable()
+    {
+        ResetLemurians();
+        spectralLemurians = [];
+    }
+
     public void FixedUpdate()
     {
         float currentDamage = CalculateFlatDamageMod();
@@ -158,9 +163,15 @@ public class GrilledLizardKebabBehavior : BaseItemBodyBehavior
         }
     }
     private float CalculateFlatDamageMod() => body.damage - body.baseDamage - (body.levelDamage * (body.level - 1));
-    public void OnDisable()
+    public void OnDisable() => ResetLemurians();
+    private void ResetLemurians()
     {
-        foreach (CharacterMaster lem in spectralLemurians) lem.TrueKill();
+        if (spectralLemurians == null)
+            return;
+
+        foreach (CharacterMaster lem in spectralLemurians)
+            if (lem) lem.TrueKill();
+
         spectralLemurians.Clear();
     }
 }

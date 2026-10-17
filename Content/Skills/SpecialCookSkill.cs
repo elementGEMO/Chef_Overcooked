@@ -7,6 +7,7 @@ using EntityStates;
 using BepInEx.Configuration;
 using R2API.Utils;
 using RoR2;
+using ChefOvercooked.Achievements;
 
 namespace ChefOvercooked;
 using static HelperFontColor;
@@ -23,7 +24,7 @@ public class SpecialCookSkill : SkillBase
         PluginConfig.Attack_Instances.Value, PluginConfig.Damage_Coefficient.Value
     );
 
-    protected override Sprite SkillSprite       => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("SkillCookIcon");
+    protected override Sprite SkillSprite   => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("SkillCookIcon");
 
     protected override InterruptPriority InterruptPriority          => InterruptPriority.Frozen;
     protected override string ActivationStateMachine                => "Weapon";
@@ -46,7 +47,11 @@ public class SpecialCookSkill : SkillBase
     {
         SkillDef = Value;
 
-        UnlockableDef = UnlockDef(SkillSprite, "Well Seasoned", "Skills.Chef.Cook");
+        UnlockableDef = UnlockDef(SkillSprite, "CHEF: Well Seasoned", "Skills.Chef.Cook");
+
+        string tokenPrefix = "ACHIEVEMENT_" + WellSeasonedAchievement.Identifier.ToUpper();
+        LanguageAPI.Add(tokenPrefix + "_NAME", "CHEF: Well Seasoned");
+        LanguageAPI.Add(tokenPrefix + "_DESCRIPTION", "As CHEF, hold 5 Meal items at once.");
 
         SkillDef.keywordTokens = [
             "KEYWORD_STUNNING",
@@ -60,6 +65,6 @@ public class SpecialCookSkill : SkillBase
         ContentAddition.AddEntityState(typeof(CookingState), out _);
 
         SkillFamily chefSpecialFamily = Addressables.LoadAssetAsync<SkillFamily>(RoR2_DLC2_Chef.ChefSpecialFamily_asset).WaitForCompletion();
-        HG.ArrayUtils.ArrayAppend(ref chefSpecialFamily.variants, new SkillFamily.Variant { unlockableDef = UnlockableDef, skillDef = SkillDef });
+        HG.ArrayUtils.ArrayAppend(ref chefSpecialFamily.variants, new SkillFamily.Variant { skillDef = SkillDef, unlockableDef = UnlockableDef });
     }
 }

@@ -35,8 +35,8 @@ namespace ChefOvercooked
 
         public void Awake()
         {
-            //connect localhost:7777
-            On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (s, u, t) => { };
+            // connect localhost:7777
+            // On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (s, u, t) => { };
 
             SetUpAssets();
 
@@ -58,6 +58,7 @@ namespace ChefOvercooked
 
             CookState.CreateEffects();
             CookingState.CreateEffects();
+            StalkState.CreateEffects();
 
             new CookDamageType();
             new SpecialCookSkill();
@@ -67,13 +68,16 @@ namespace ChefOvercooked
         {
             // Regular Items
             new PrimitiveClawsItem();
+            new WarpingStalkItem();
 
             // Food / Meal Items
             new MonsterMeatItem();
+
             new GrilledLizardKebabItem();
             new GolemEssenceTwistItem();
             new GlowingJellyPastaItem();
             new BloodCandiedEyeItem();
+            new CarbonatedStormItem();
         }
 
         private void CreateEquipments()
@@ -89,6 +93,7 @@ namespace ChefOvercooked
 
             new DamageOnBleedBuff();
             new SpectralBuff();
+            new StalkBuff();
         }
 
         private void SetUpAssets()

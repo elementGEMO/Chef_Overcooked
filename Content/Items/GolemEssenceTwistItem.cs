@@ -74,7 +74,7 @@ public class GolemEssenceTwistItem : ItemBase
 
     private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
     {
-        args.armorAdd += sender.inventory ? PluginConfig.Golem_Base_Armor.Value + PluginConfig.Golem_Stack_Armor.Value * (sender.inventory.GetItemCount(ItemDef) - 1) : 0;
+        args.armorAdd += sender.inventory ? PluginConfig.Golem_Base_Armor.Value + PluginConfig.Golem_Stack_Armor.Value * (sender.inventory.GetItemCountEffective(ItemDef) - 1) : 0;
     }
         
     protected override void LogDisplay()

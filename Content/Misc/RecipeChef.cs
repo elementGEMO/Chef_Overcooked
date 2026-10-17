@@ -52,10 +52,11 @@ public class RecipeCatalogChef
             EquipmentDef inputTwoEquip = EquipmentCatalog.GetEquipmentDef(EquipmentCatalog.FindEquipmentIndex(recipeString.inputTwo));
 
             ItemDef outputItem = ItemCatalog.GetItemDef(ItemCatalog.FindItemIndex(recipeString.output));
+            EquipmentDef outputEquipment = EquipmentCatalog.GetEquipmentDef(EquipmentCatalog.FindEquipmentIndex(recipeString.output));
 
             if (!inputOneItem && !inputOneEquip) errorReason += recipeString.inputOne + ", ";
             if (!inputTwoItem && !inputTwoEquip) errorReason += recipeString.inputTwo + ", ";
-            if (!outputItem) errorReason += recipeString.output;
+            if (!outputItem && !outputEquipment) errorReason += recipeString.output;
 
             if (!errorReason.Equals(""))
             {
@@ -76,7 +77,7 @@ public class RecipeCatalogChef
             if (inputOneItem) inputOneItem.tags.Append(ItemTag.FoodRelated);
             if (inputTwoItem) inputTwoItem.tags.Append(ItemTag.FoodRelated);
 
-            craftableDef.pickup = outputItem;
+            craftableDef.pickup = outputItem ? outputItem : outputEquipment;
             craftableDef.recipes = [recipe];
         }
 

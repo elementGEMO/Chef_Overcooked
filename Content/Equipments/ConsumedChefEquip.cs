@@ -1,5 +1,8 @@
 ﻿using RoR2;
+using RoR2.ExpansionManagement;
+using RoR2BepInExPack.GameAssetPaths.Version_1_35_0;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace ChefOvercooked;
 using static StringHelper;
@@ -7,6 +10,7 @@ using static HelperFontColor;
 
 public class ConsumedChefEquip : EquipmentBase
 {
+    protected override ExpansionDef RequiredExpansion => Addressables.LoadAssetAsync<ExpansionDef>(RoR2_DLC3.DLC3_asset).WaitForCompletion();
     protected override string Name => "ConsumedChefEquip";
     public static EquipmentDef EquipmentDef;
     protected override float Cooldown => 70f;
@@ -24,7 +28,7 @@ public class ConsumedChefEquip : EquipmentBase
     }
     protected override bool ActivateEquip(EquipmentSlot slot)
     {
-        if (slot.characterBody)
+        if (slot.characterBody && slot.characterBody.gameObject)
         {
             Chat.SendBroadcastChat(new Chat.BodyChatMessage
             {

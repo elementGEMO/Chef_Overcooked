@@ -61,6 +61,17 @@ public static class PluginConfig
     public static ConfigEntry<float> Eye_Bleed_Damage;
     public static ConfigEntry<float> Eye_Slow_Coefficient;
 
+    // Carbonated Storm
+    public static ConfigEntry<float> Carbonated_Proc_Chance;
+    public static ConfigEntry<float> Carbonated_Base_Heal;
+    public static ConfigEntry<float> Carbonated_Heal_Stack;
+
+    // Warping Stalk
+    public static ConfigEntry<float> Stalk_Nullify_Chance;
+    public static ConfigEntry<float> Stalk_Base_Duration;
+    public static ConfigEntry<float> Stalk_Duration_Stack;
+    public static ConfigEntry<bool> Stalk_Luck_Affected;
+
     public static void Init()
     {
         GeneralInit();
@@ -132,7 +143,7 @@ public static class PluginConfig
     }
     private static void ItemInit()
     {
-        string clawsToken = "Item - Primitive Claws";   // Primitive Claws Configs
+        string clawsToken = "Uncommon Item - Primitive Claws";   // Primitive Claws Configs
 
         Claw_Base_Bleed = ChefOverCookedPlugin.Instance.Config.Bind(
             clawsToken, "Bleed Chance", 5f,
@@ -154,7 +165,7 @@ public static class PluginConfig
             "[ # of Max Buffs added per single item stack ]"
         ).PostConfig(MathProcess.Max, 0);
 
-        string kebabToken = "Item - Grilled Lizard Kebab";  // Grilled Lizard Kebab Configs
+        string kebabToken = "Meal Item - Grilled Lizard Kebab";  // Grilled Lizard Kebab Configs
 
         Kebab_Base_Damage = ChefOverCookedPlugin.Instance.Config.Bind(
             kebabToken, "Base Damage", 30f,
@@ -176,7 +187,7 @@ public static class PluginConfig
             "[ # of Lemurians that can spawn ]"
         ).PostConfig(MathProcess.Max, 0);
 
-        string golemToken = "Item - Golem Essence with a Twist";  // Golem Essence Twist Configs
+        string golemToken = "Meal Item - Golem Essence with a Twist";  // Golem Essence Twist Configs
 
         Golem_Percent_Barrier = ChefOverCookedPlugin.Instance.Config.Bind(
             golemToken, "Percent Barrier Gain", 30f,
@@ -198,7 +209,7 @@ public static class PluginConfig
             "[ # Armor per Item stack ]"
         ).PostConfig(MathProcess.Max, 0);
 
-        string jellyToken = "Item - Glowing Jelly Pasta";   // Glowing Jelly Pasta Configs
+        string jellyToken = "Meal Item - Glowing Jelly Pasta";   // Glowing Jelly Pasta Configs
 
         Jelly_Cooldown_Base = ChefOverCookedPlugin.Instance.Config.Bind(
             jellyToken, "Base Cooldown Reduction", 1f,
@@ -220,7 +231,7 @@ public static class PluginConfig
             "[ #m Stun Radius when Utility Skill is used ]"
         ).PostConfig(MathProcess.Max, 0);
 
-        string eyeToken = "Item - Blood Candied Eye";   // Blood Candied Eye
+        string eyeToken = "Meal Item - Blood Candied Eye";   // Blood Candied Eye
 
         Eye_Range_Base = ChefOverCookedPlugin.Instance.Config.Bind(
             eyeToken, "Base Radius", 10f,
@@ -241,6 +252,45 @@ public static class PluginConfig
             eyeToken, "Slow Down Coefficient", 80f,
             "[ #% Slowed Down to projectiles within the Radius ]"
         ).PostConfig(MathProcess.Max, 0);
+
+        string carbonatedToken = "Meal Item - Carbonated Storm";    // Carbonated Storm
+
+        Carbonated_Proc_Chance = ChefOverCookedPlugin.Instance.Config.Bind(
+            carbonatedToken, "Proc Chance", 20f,
+            "[ #% Chance for Bottle Cap to drop ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Carbonated_Base_Heal = ChefOverCookedPlugin.Instance.Config.Bind(
+            carbonatedToken, "Base Heal", 25f,
+            "[ # Flat Health when picking up a Bottle Cap ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Carbonated_Heal_Stack = ChefOverCookedPlugin.Instance.Config.Bind(
+            carbonatedToken, "Heal per Stack", 25f,
+            "[ # Flat Health per Item stack ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        string stalkToken = "Uncommon Item - Warping Stalk"; // Warpin Stalk
+
+        Stalk_Nullify_Chance = ChefOverCookedPlugin.Instance.Config.Bind(
+            stalkToken, "Nullify Chance", 15f,
+            "[ #% Chance for incoming damage to nullify, and activate this Item ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Stalk_Base_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
+            stalkToken, "Intangible Duration", 3f,
+            "[ #s Duration for Intangibility ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Stalk_Duration_Stack = ChefOverCookedPlugin.Instance.Config.Bind(
+            stalkToken, "Intangible Duration per Stack", 0.5f,
+            "[ #s Duration per Item stack for Intangibility ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Stalk_Luck_Affected = ChefOverCookedPlugin.Instance.Config.Bind(
+            stalkToken, "Affected by Luck", false,
+            "[ If Luck should affect the Nullify chance ]"
+        ).PostConfig();
     }
     public enum MathProcess
     {

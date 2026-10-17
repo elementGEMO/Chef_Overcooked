@@ -1,10 +1,13 @@
 ﻿using RoR2;
 using R2API;
 using UnityEngine;
+using RoR2.ExpansionManagement;
 
 namespace ChefOvercooked;
 public abstract class EquipmentBase : GenericBase<EquipmentDef>
 {
+    protected virtual ExpansionDef RequiredExpansion => null;
+    protected virtual bool CanRandomTrigger => false;
     protected virtual bool IsConsumed => false;
     protected virtual bool CanDrop => true;
     protected virtual float Cooldown => 0f;
@@ -24,6 +27,7 @@ public abstract class EquipmentBase : GenericBase<EquipmentDef>
         Value = ScriptableObject.CreateInstance<EquipmentDef>();
         Value.name = Name;
 
+        Value.canBeRandomlyTriggered = CanRandomTrigger;
         Value.isConsumed = IsConsumed;
         Value.canDrop = CanDrop;
 
@@ -43,6 +47,9 @@ public abstract class EquipmentBase : GenericBase<EquipmentDef>
 
             LogDisplay();
         }
+
+        if (RequiredExpansion)
+            Value.requiredExpansion = RequiredExpansion;
 
         ItemAPI.Add(new CustomEquipment(Value, ItemDisplay()));
 

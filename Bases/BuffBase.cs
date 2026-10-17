@@ -10,10 +10,11 @@ public abstract class BuffBase : GenericBase<BuffDef>
 
     protected virtual BuffDef.StackingDisplayMethod StackDisplay => BuffDef.StackingDisplayMethod.Default;
 
-    protected virtual bool IsCooldown   => false;
-    protected virtual bool IsDebuff     => false;
-    protected virtual bool IsHidden     => false;
-    protected virtual bool IsStackable  => false;
+    protected virtual bool IgnoreGrowthNectar   => true;
+    protected virtual bool IsCooldown           => false;
+    protected virtual bool IsDebuff             => false;
+    protected virtual bool IsHidden             => false;
+    protected virtual bool IsStackable          => false;
 
     protected override void Create()
     {
@@ -24,6 +25,8 @@ public abstract class BuffBase : GenericBase<BuffDef>
         Value.iconSprite = IconSprite;
 
         Value.stackingDisplayMethod = StackDisplay;
+
+        Value.ignoreGrowthNectar = IgnoreGrowthNectar;
         Value.isCooldown = IsCooldown;
         Value.isDebuff = IsDebuff;
         Value.isHidden = IsHidden;

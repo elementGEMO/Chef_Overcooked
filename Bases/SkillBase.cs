@@ -63,9 +63,11 @@ public abstract class SkillBase : GenericBase<SkillDef>
     protected virtual UnlockableDef UnlockDef(Sprite unlockIcon, string unlockName, string internalName)
     {
         UnlockableDef skillUnlock = ScriptableObject.CreateInstance<UnlockableDef>();
+
         (skillUnlock as ScriptableObject).name = internalName;
-        skillUnlock.nameToken = HelperLanguage.LanguageAdd("WELLSEASONED_UNLOCK", unlockName);
-        skillUnlock.cachedName = Name + "_Unlock";
+        skillUnlock.cachedName = internalName;
+
+        skillUnlock.nameToken = HelperLanguage.LanguageAdd(skillUnlock.nameToken, unlockName);
         skillUnlock.achievementIcon = unlockIcon;
         skillUnlock.hidden = false;
 

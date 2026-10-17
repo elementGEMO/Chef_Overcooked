@@ -1,6 +1,4 @@
 ﻿using R2API;
-using R2API.Networking;
-using R2API.Networking.Interfaces;
 using RoR2;
 using RoR2.Items;
 using RoR2.Projectile;
@@ -45,7 +43,7 @@ public class BloodCandiedEyeItem : ItemBase
     {
         ItemDef = Value;
 
-        RecipeCatalogChef.AddRecipe("SlowOnHit", PrimitiveClawsItem.ItemDef.name, Name);
+        RecipeCatalogChef.AddRecipe("SlowOnHit", WarpingStalkItem.ItemDef.name, Name);
         RecipeCatalogChef.AddRecipe("SlowOnHit", "TeleportOnLowHealth", Name);
 
         CreateEffect();

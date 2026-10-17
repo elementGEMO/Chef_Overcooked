@@ -102,7 +102,7 @@ public class CookState : GenericCharacterMain
 
         if (attackCount > PluginConfig.Attack_Instances.Value && isAuthority)
         {
-            if (characterBody.inventory && characterBody.inventory.GetItemCount(MonsterMeatItem.ItemDef) > 0)
+            if (characterBody.inventory && characterBody.inventory.GetItemCountEffective(MonsterMeatItem.ItemDef) > 0)
                 characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 2f);
 
             outer.SetNextStateToMain();
