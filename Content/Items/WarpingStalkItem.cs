@@ -27,7 +27,7 @@ public class WarpingStalkItem : ItemBase
             RoundVal(PluginConfig.Stalk_Nullify_Chance.Value)),
         
         string.Format("and become " + "intangible".Style(FontColor.cIsUtility) + " for " + "{0} ".Style(FontColor.cIsUtility) + "({1} per stack) ".Style(FontColor.cStack).OptText(PluginConfig.Stalk_Duration_Stack.Value > 0) + "seconds".Style(FontColor.cIsUtility),
-            RoundVal(PluginConfig.Stalk_Base_Duration.Value), RoundVal(PluginConfig.Stalk_Duration_Stack.Value, 1).SignVal()),
+            RoundVal(PluginConfig.Stalk_Base_Duration.Value), RoundVal(PluginConfig.Stalk_Duration_Stack.Value).SignVal()),
         
         ", causing " + "ALL attacks ".Style(FontColor.cIsDamage) + "to pass through you.",
 
@@ -89,7 +89,7 @@ public class WarpingStalkItem : ItemBase
             EffectManager.SpawnEffect(NullEffect.prefab, hitEffect, true);
 
             float baseDuration = PluginConfig.Stalk_Base_Duration.Value + PluginConfig.Stalk_Base_Duration.Value * (itemCount - 1);
-            float procDuration = Mathf.Lerp(Mathf.Max(baseDuration * 0.25f, 1), baseDuration, damageInfo.procCoefficient);
+            float procDuration = Mathf.Lerp(Mathf.Max(baseDuration * 0.20f, 1), baseDuration, damageInfo.procCoefficient);
 
             for (int i = 0; i < Mathf.CeilToInt(procDuration); i++)
                 self.body.AddTimedBuff(StalkBuff.BuffDef, procDuration / Mathf.CeilToInt(procDuration) * i);
