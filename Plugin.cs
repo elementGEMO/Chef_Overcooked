@@ -23,7 +23,7 @@ namespace ChefOvercooked
         public const string PluginGUID = PluginCreator + "." + PluginName;
         public const string PluginCreator = "noodleGemo";
         public const string PluginName = "Chef_Overcooked";
-        public const string PluginVersion = "1.2.2";
+        public const string PluginVersion = "1.2.3";
 
         public static ExpansionDef AlloyedCollective { get; private set; }
         public static ChefOverCookedPlugin Instance { get; private set; }
@@ -33,8 +33,11 @@ namespace ChefOvercooked
 
         public void Awake()
         {
-            // connect localhost:7777
-            // On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (s, u, t) => { };
+            #if DEBUG == true
+                Log.Error("Chef Overcooked is currently in a debug build. Report ASAP if in a release build.");
+                Log.Info("connect localhost:7777 - Connect to self local multiplayer");
+                On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (s, u, t) => { };
+            #endif
 
             SetUpAssets();
 
