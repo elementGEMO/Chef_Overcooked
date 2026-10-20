@@ -33,12 +33,6 @@ namespace ChefOvercooked
 
         public void Awake()
         {
-            #if DEBUG == true
-                Log.Error("Chef Overcooked is currently in a debug build. Report ASAP if in a release build.");
-                Log.Info("connect localhost:7777 - Connect to self local multiplayer");
-                On.RoR2.Networking.NetworkManagerSystemSteam.OnClientConnect += (s, u, t) => { };
-            #endif
-
             SetUpAssets();
 
             PluginConfig.Init();
