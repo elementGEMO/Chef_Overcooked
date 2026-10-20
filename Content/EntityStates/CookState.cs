@@ -80,7 +80,8 @@ public class CookState : GenericCharacterMain
         PlayAnimation("Body", "BoostedRolyPoly", "FireRolyPoly.playbackRate", PluginConfig.Attack_Rate.Value, 0f);
         GetModelAnimator().SetBool("isInBoostedRolyPoly", true);
 
-        if (NetworkServer.active) characterBody.AddBuff(CookingBuff.BuffDef);
+        if (NetworkServer.active)
+            characterBody.AddBuff(CookingBuff.BuffDef);
     }
     public override void FixedUpdate()
     {
@@ -89,7 +90,8 @@ public class CookState : GenericCharacterMain
 
         SlashEffectSpawn();
 
-        characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 0.1f);
+        if (NetworkServer.active)
+            characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 0.1f);
 
         setDuration -= GetDeltaTime();
         if (setDuration <= 0)
@@ -102,7 +104,7 @@ public class CookState : GenericCharacterMain
 
         if (attackCount > PluginConfig.Attack_Instances.Value && isAuthority)
         {
-            if (characterBody.inventory && characterBody.inventory.GetItemCountEffective(MonsterMeatItem.ItemDef) > 0)
+            if (characterBody.inventory && characterBody.inventory.GetItemCountEffective(MonsterMeatItem.ItemDef) > 0 && NetworkServer.active)
                 characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 2f);
 
             outer.SetNextStateToMain();
@@ -115,7 +117,8 @@ public class CookState : GenericCharacterMain
         GetModelAnimator().SetBool("isInBoostedRolyPoly", false);
         PlayCrossfade("Body", "ExitRolyPoly", 0.1f);
 
-        if (NetworkServer.active) characterBody.RemoveBuff(CookingBuff.BuffDef);
+        if (NetworkServer.active)
+            characterBody.RemoveBuff(CookingBuff.BuffDef);
 
         base.OnExit();
     }

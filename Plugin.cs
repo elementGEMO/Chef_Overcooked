@@ -15,9 +15,7 @@ namespace ChefOvercooked
     [BepInDependency(DamageAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(PrefabAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(LanguageAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
-    //[BepInDependency(UnlockableAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(RecalculateStatsAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
-    //[BepInDependency(R2API.Networking.NetworkingAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
 
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     public class ChefOverCookedPlugin : BaseUnityPlugin
@@ -25,7 +23,7 @@ namespace ChefOvercooked
         public const string PluginGUID = PluginCreator + "." + PluginName;
         public const string PluginCreator = "noodleGemo";
         public const string PluginName = "Chef_Overcooked";
-        public const string PluginVersion = "1.2.1";
+        public const string PluginVersion = "1.2.2";
 
         public static ExpansionDef AlloyedCollective { get; private set; }
         public static ChefOverCookedPlugin Instance { get; private set; }

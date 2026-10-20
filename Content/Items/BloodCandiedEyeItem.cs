@@ -61,6 +61,7 @@ public class BloodCandiedEyeItem : ItemBase
         sphere.GetComponent<Rewired.ComponentControls.Effects.RotateAroundAxis>().fastRotationSpeed = 10f;
 
         UnityEngine.Object.Destroy(ProjectilePrefab.GetComponent<ProjectileNetworkTransform>());
+        UnityEngine.Object.Destroy(ProjectilePrefab.GetComponent<NetworkIdentity>());
         UnityEngine.Object.Destroy(ProjectilePrefab.GetComponent<BuffWard>());
 
         UnityEngine.Object.Destroy(areaIndicator.Find("Point Light").gameObject);
@@ -133,9 +134,11 @@ public class BloodCandiedEyeBehavior : BaseItemBodyBehavior
         areaVisual      = slowField.transform.Find("AreaIndicator");
         collision       = slowField.GetComponent<SphereCollider>();
         characterMaster = body.master;
-        currentVelocity = 0f;
 
-        collision.radius = 0f;
+        currentVelocity     = 0f;
+        collision.radius    = 0f;
+
+        slowField.GetComponent<TeamFilter>().teamIndex = body.master.teamIndex;
     }
     public void FixedUpdate()
     {

@@ -5,6 +5,7 @@ using MonoMod.Cil;
 using Mono.Cecil.Cil;
 using System;
 using RoR2BepInExPack.GameAssetPaths.Version_1_35_0;
+using EntityStates;
 
 namespace ChefOvercooked;
 public class StalkBuff : BuffBase
@@ -36,7 +37,18 @@ public class StalkBuff : BuffBase
     private void CharacterBody_onBuffFirstStackGained(CharacterBody self, BuffDef buff)
     {
         if (buff == Value)
-            EntityStateMachine.FindByCustomName(self.gameObject, "Body").SetNextState(new StalkState());
+        {
+            EntityStateMachine stalkESM = EntityStateMachine.FindByCustomName(self.gameObject, "Stalk");
+
+            if (!stalkESM)
+            {
+                stalkESM = self.gameObject.AddComponent<EntityStateMachine>();
+                stalkESM.mainStateType = new SerializableEntityStateType(typeof(GenericCharacterMain));
+                stalkESM.customName = "Stalk";
+            }
+
+            stalkESM.SetState(new StalkState());
+        }
     }
 
     private void CharacterModel_UpdateRendererMaterials(ILContext il)

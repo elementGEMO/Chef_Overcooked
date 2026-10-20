@@ -58,7 +58,7 @@ public abstract class EquipmentBase : GenericBase<EquipmentDef>
 
     internal bool EquipmentSlot_PerformEquipmentAction(On.RoR2.EquipmentSlot.orig_PerformEquipmentAction orig, EquipmentSlot self, EquipmentDef equipmentDef)
     {
-        if (equipmentDef == Value)
+        if (equipmentDef && equipmentDef == Value)
             return ActivateEquip(self);
         else
             return orig(self, equipmentDef);
