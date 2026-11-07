@@ -3,6 +3,7 @@ using RoR2;
 using MonoMod.Cil;
 using Mono.Cecil.Cil;
 using System;
+using R2API;
 
 namespace ChefOvercooked;
 
@@ -19,7 +20,6 @@ public class CookedBuff : BuffBase
 
         IL.RoR2.GlobalEventManager.OnCharacterDeath += GlobalEventManager_OnCharacterDeath;
     }
-
     private void GlobalEventManager_OnCharacterDeath(ILContext il)
     {
         ILCursor cursor = new(il);

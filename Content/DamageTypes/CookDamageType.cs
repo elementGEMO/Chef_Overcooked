@@ -20,38 +20,17 @@ public class CookDamageType
     {
         DamageType = DamageAPI.ReserveDamageType();
         IL.RoR2.ItemDef.AttemptGrant += ItemDef_AttemptGrant;
-        IL.RoR2.UI.HealthBar.UpdateBarInfos += HealthBar_UpdateBarInfos;
         IL.RoR2.HealthComponent.TakeDamageProcess += HealthComponent_TakeDamageProcess;
         GlobalEventManager.onCharacterDeathGlobal += GlobalEventManager_onCharacterDeathGlobal;
         GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
+
+        ExecuteAPI.CalculateAdditiveExecuteThresholdForViewer += CookExecuteVisual;
 
         MeatOrb.CreatePrefab();
     }
 
     private void ItemDef_AttemptGrant(ILContext il)
     {
-        /*
-        ILCursor cursor = new(il);
-
-        if (cursor.TryGotoNext(
-            x => x.MatchLdarg(0),
-            x => x.MatchLdfld(typeof(PickupDef.GrantContext), nameof(PickupDef.GrantContext.body)),
-            x => x.MatchCallvirt(typeof(CharacterBody), "get_inventory")
-        ))
-        {
-            if (cursor.TryGotoNext(x => x.MatchLdcR4(out _)))
-            {
-                cursor.Remove();
-                cursor.Emit(OpCodes.Ldarg_0);
-                cursor.Emit(OpCodes.Ldobj, typeof(PickupDef.GrantContext));
-                cursor.EmitDelegate<Func<PickupDef.GrantContext, float>>(context => context.controller.pickup.decayValue);
-            }
-            else Log.Error("COOK_DAMAGE_TYPE_ATTEMPTGRANT_1 failed to ILHook #2");
-        }
-        else Log.Error("COOK_DAMAGE_TYPE_ATTEMPTGRANT_1 failed to ILHook #1");
-
-        cursor              = new(il);*/
-
         ILCursor cursor     = new(il);
         ILLabel breakState  = null;
         int pickupDefIndex  = -1;
@@ -108,56 +87,6 @@ public class CookDamageType
             }
         }
     }
-    private void HealthBar_UpdateBarInfos(ILContext il)
-    {
-        ILCursor cursor = new(il);
-        int cullIndex = -1;
-
-        if (cursor.TryGotoNext(
-            x => x.MatchLdloc(out _),
-            x => x.MatchLdfld(typeof(HealthComponent.HealthBarValues), nameof(HealthComponent.HealthBarValues.cullFraction)),
-            x => x.MatchStloc(out cullIndex)
-        ) && cullIndex != -1)
-        {
-            if (cursor.TryGotoNext(
-                x => x.MatchLdarg(0),
-                x => x.MatchLdflda(typeof(HealthBar), nameof(HealthBar.barInfoCollection)),
-                x => x.MatchLdflda(typeof(HealthBar.BarInfoCollection), nameof(HealthBar.BarInfoCollection.cullBarInfo))
-            ))
-            {
-                cursor.MoveAfterLabels();
-
-                cursor.Emit(OpCodes.Ldarg_0);
-                cursor.Emit(OpCodes.Ldloc, cullIndex);
-
-                cursor.EmitDelegate<Func<HealthBar, float, float>>((self, cull) =>
-                {
-                    CharacterBody victimBody = self.source ? self.source.body : null;
-                    CharacterBody viewerBody = self.viewerBody;
-
-                    if (victimBody != null && viewerBody != null)
-                    {
-                        bool executeImmune = (victimBody.bodyFlags & CharacterBody.BodyFlags.ImmuneToExecutes) > CharacterBody.BodyFlags.None;
-                        bool isViewerChef = viewerBody.GetComponent<ChefController>();
-
-                        if (!executeImmune && isViewerChef)
-                        {
-                            SkillDef selectSpecial = viewerBody.skillLocator?.special?.skillDef;
-                            bool hasCookAbility = selectSpecial ? selectSpecial == SpecialCookSkill.SkillDef : false;
-
-                            if (hasCookAbility) cull = Math.Max(cull, PluginConfig.Execute_Threshold.Value);
-                        }
-                    }
-
-                    return cull;
-                });
-
-                cursor.Emit(OpCodes.Stloc, cullIndex);
-            }
-            else Log.Error("COOKDAMAGETYPE_UPDATEBARINFOS failed to ILHook #2");
-        }
-        else Log.Error("COOKDAMAGETYPE_UPDATEBARINFOS failed to ILHook #1");
-    }
     private void HealthComponent_TakeDamageProcess(ILContext il)
     {
         ILCursor cursor = new(il);
@@ -198,14 +127,14 @@ public class CookDamageType
     }
     private void GlobalEventManager_onCharacterDeathGlobal(DamageReport report)
     {
-        CharacterBody attackerBody = report.attackerBody;
-        CharacterBody victimBody = report.victimBody;
-        DamageInfo damageInfo = report.damageInfo;
+        CharacterBody attackerBody  = report.attackerBody;
+        CharacterBody victimBody    = report.victimBody;
+        DamageInfo damageInfo       = report.damageInfo;
 
         if (attackerBody != null && victimBody != null && damageInfo != null)
         {
             bool hasDamage      = DamageAPI.HasModdedDamageType(report.damageInfo, DamageType);
-            bool hasComponent   = victimBody.GetComponent<MeatTolerance>();
+            bool hasComponent   = victimBody.GetComponent<MeatTolerance>(); // Checks for leniency for execute
 
             if (hasDamage || hasComponent)
             {
@@ -226,9 +155,9 @@ public class CookDamageType
     }
     private void GlobalEventManager_onServerDamageDealt(DamageReport report)
     {
-        CharacterBody attackerBody = report.attackerBody;
-        CharacterBody victimBody = report.victimBody;
-        DamageInfo damageInfo = report.damageInfo;
+        CharacterBody attackerBody  = report.attackerBody;
+        CharacterBody victimBody    = report.victimBody;
+        DamageInfo damageInfo       = report.damageInfo;
 
         if (attackerBody != null && victimBody != null && damageInfo != null)
         {
@@ -238,6 +167,22 @@ public class CookDamageType
                 meatComponent?.SetAttacker(attackerBody);
             }
         }
+    }
+    private void CookExecuteVisual(CharacterBody victimBody, CharacterBody viewerBody, ref float executeFractionAdd)
+    {
+        if (victimBody == null || viewerBody == null)
+            return;
+
+        if (!viewerBody.GetComponent<ChefController>())
+            return;
+
+        GenericSkill genericSpecial = viewerBody.skillLocator ? viewerBody.skillLocator.special : null;
+        SkillDef specialSkill       = genericSpecial ? genericSpecial.skillDef : null;
+
+        if (specialSkill != SpecialCookSkill.SkillDef)
+            return;
+
+        executeFractionAdd = Mathf.Clamp(executeFractionAdd, PluginConfig.Execute_Threshold.Value, 1f);
     }
 
     public class MeatTolerance : MonoBehaviour

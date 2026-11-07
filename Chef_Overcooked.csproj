@@ -21,6 +21,7 @@
     <PackageReference Include="R2API.ProcType" Version="1.0.2" />
     <PackageReference Include="R2API.RecalculateStats" Version="1.6.3" />
     <PackageReference Include="RiskOfRain2.GameLibs" Version="1.5.0-r.1" />
+    <PackageReference Include="RiskofThunder-R2API_Execute" Version="1.1.3" />
     <PackageReference Include="RiskofThunder-R2API_Unlockable" Version="1.0.2" />
     <PackageReference Include="RoR2BepInExPack" Version="1.36.0" />
     <PackageReference Include="Smooth_Salad-ShaderSwapper" Version="1.0.1" />
