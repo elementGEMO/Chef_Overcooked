@@ -278,12 +278,12 @@ public static class PluginConfig
         ).PostConfig(MathProcess.Max, 0);
 
         Stalk_Base_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
-            stalkToken, "Intangible Duration", 2f,
+            stalkToken, "Intangible Duration", 1f,
             "[ #s Duration for Intangibility ]"
         ).PostConfig(MathProcess.Max, 0);
 
         Stalk_Duration_Stack = ChefOverCookedPlugin.Instance.Config.Bind(
-            stalkToken, "Intangible Duration per Stack", 2f,
+            stalkToken, "Intangible Duration per Stack", 1f,
             "[ #s Duration per Item stack for Intangibility ]"
         ).PostConfig(MathProcess.Max, 0);
 

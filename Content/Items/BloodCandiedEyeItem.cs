@@ -147,7 +147,7 @@ public class BloodCandiedEyeBehavior : BaseItemBodyBehavior
         float itemRadius = PluginConfig.Eye_Range_Base.Value + PluginConfig.Eye_Range_Stack.Value * (body.inventory.GetItemCountEffective(BloodCandiedEyeItem.ItemDef) - 1);
         float smoothScale = Mathf.SmoothDamp(collision.radius, itemRadius, ref currentVelocity, 0.5f);
 
-        UpdateVisual(smoothScale, Vector3.one);
+        UpdateVisual(smoothScale);
 
         if (NetworkServer.active)
         {
@@ -177,13 +177,11 @@ public class BloodCandiedEyeBehavior : BaseItemBodyBehavior
             }
         }
     }
-    public void UpdateVisual(float radius, Vector3 position, bool updatePos = false)
+    public void UpdateVisual(float radius)
     {
         collision.radius = radius;
         areaVisual.localScale = Vector3.one * radius;
-
-        if (updatePos)
-            areaVisual.position = position;
+        areaVisual.position = body.corePosition; // Stops the radius from drifting when it changes scale
     }
     public void OnDisable()
     {

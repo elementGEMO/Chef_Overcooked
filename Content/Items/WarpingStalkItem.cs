@@ -3,6 +3,9 @@ using UnityEngine.AddressableAssets;
 using UnityEngine;
 using R2API;
 using RoR2;
+using MonoMod.Cil;
+using Mono.Cecil.Cil;
+using System;
 
 namespace ChefOvercooked;
 using static StringHelper;
@@ -14,10 +17,13 @@ public class WarpingStalkItem : ItemBase
     protected override CombinedItemTier Tier => ItemTier.Tier2;
     protected override ItemTag[] Tags => [
         ItemTag.Utility,
+        ItemTag.CanBeRental,
         ItemTag.FoodRelated,
-        ItemTag.CanBeTemporary,
+        ItemTag.AIBlacklist,
         ItemTag.BrotherBlacklist
     ];
+
+    protected override bool IsRemovable => true;
 
     protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("warpingStalkModel");
     protected override Sprite PickupIconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texWarpingStalkIcon");
@@ -43,7 +49,7 @@ public class WarpingStalkItem : ItemBase
 
         CreateEffects();
 
-        On.RoR2.HealthComponent.TakeDamageProcess += HealthComponent_TakeDamageProcess;
+        IL.RoR2.HealthComponent.TakeDamageProcess += HealthComponent_TakeDamageProcess;
     }
 
     private static void CreateEffects()
@@ -61,7 +67,7 @@ public class WarpingStalkItem : ItemBase
 
         text.token = HelperLanguage.LanguageAdd("WARPING_BLOCK", "NULLIFIED!");
 
-        Object.Destroy(prefab.transform.Find("Fluff").gameObject);
+        UnityEngine.Object.Destroy(prefab.transform.Find("Fluff").gameObject);
 
         NullEffect = new()
         {
@@ -71,30 +77,53 @@ public class WarpingStalkItem : ItemBase
         };
 
         ContentAddition.AddEffect(NullEffect.prefab);
-    } 
-
-    private void HealthComponent_TakeDamageProcess(On.RoR2.HealthComponent.orig_TakeDamageProcess orig, HealthComponent self, DamageInfo damageInfo)
+    }
+    private void HealthComponent_TakeDamageProcess(ILContext il)
     {
-        float luck      = (PluginConfig.Stalk_Luck_Affected.Value && self.body.master) ? self.body.master.luck : 0f;
-        int itemCount   = self.body.inventory ? self.body.inventory.GetItemCountEffective(ItemDef): 0;
-        bool canStalk   = self.body.master ? Util.CheckRoll(PluginConfig.Stalk_Nullify_Chance.Value, luck, self.body.master) && itemCount > 0 : false;
+        ILCursor cursor = new(il);
 
-        if (!self.body.HasBuff(StalkBuff.BuffDef) && canStalk)
+        if (cursor.TryGotoNext(
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld(typeof(HealthComponent), nameof(HealthComponent.onIncomingDamageReceivers)),
+            x => x.MatchStloc(out _)
+        ))
         {
-            EffectData hitEffect = new() {
-                origin = damageInfo.position,
-                rotation = Util.QuaternionSafeLookRotation((damageInfo.force != Vector3.zero) ? damageInfo.force : Random.onUnitSphere)
-            };
+            cursor.MoveAfterLabels();
 
-            EffectManager.SpawnEffect(NullEffect.prefab, hitEffect, true);
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.Emit(OpCodes.Ldarg_1);
 
-            float baseDuration = PluginConfig.Stalk_Base_Duration.Value + PluginConfig.Stalk_Base_Duration.Value * (itemCount - 1);
-            float procDuration = Mathf.Lerp(Mathf.Max(baseDuration * 0.20f, 1), baseDuration, damageInfo.procCoefficient);
+            cursor.EmitDelegate<Action<HealthComponent, DamageInfo>>((self, damageInfo) =>
+            {
+                bool flag4 = (ulong)(damageInfo.damageType & DamageType.BypassArmor) != 0;  // Flag replicate, too lazy to reference it
 
-            for (int i = 0; i < Mathf.CeilToInt(procDuration); i++)
-                self.body.AddTimedBuff(StalkBuff.BuffDef, procDuration / Mathf.CeilToInt(procDuration) * i);
-        }
-        else orig(self, damageInfo);
+                if (flag4 || damageInfo.rejected)
+                    return;
+
+                float luck      = (PluginConfig.Stalk_Luck_Affected.Value && self.body.master) ? self.body.master.luck : 0f;
+                int itemCount   = self.body.inventory ? self.body.inventory.GetItemCountEffective(ItemDef) : 0;
+                bool canStalk   = self.body.master ? Util.CheckRoll(PluginConfig.Stalk_Nullify_Chance.Value, luck, self.body.master) && itemCount > 0 : false;
+
+                if (!canStalk || self.body.HasBuff(StalkBuff.BuffDef))
+                    return;
+
+                damageInfo.rejected = true;
+
+                EffectData hitEffect = new()
+                {
+                    origin = damageInfo.position,
+                    rotation = Util.QuaternionSafeLookRotation((damageInfo.force != Vector3.zero) ? damageInfo.force : UnityEngine.Random.onUnitSphere)
+                };
+
+                EffectManager.SpawnEffect(NullEffect.prefab, hitEffect, true);
+
+                float baseDuration = PluginConfig.Stalk_Base_Duration.Value + PluginConfig.Stalk_Duration_Stack.Value * (itemCount - 1);
+                float procDuration = Mathf.Lerp(Mathf.Max(baseDuration * 0.20f, 1), baseDuration, damageInfo.procCoefficient);
+
+                for (int i = 0; i < Mathf.CeilToInt(procDuration); i++)
+                    self.body.AddTimedBuff(StalkBuff.BuffDef, procDuration / Mathf.CeilToInt(procDuration) * (i + 1));
+            });
+        } else Log.Error("WARPINGSTALK_TAKEDAMAGEPROCESS failed to ILHook");
     }
 
     protected override void LogDisplay()
