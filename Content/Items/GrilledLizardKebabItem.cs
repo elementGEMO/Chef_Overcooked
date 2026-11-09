@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using UnityEngine.Networking;
 
 namespace ChefOvercooked;
 using static StringHelper;
@@ -20,31 +21,38 @@ public class GrilledLizardKebabItem : ItemBase
     protected override ItemTag[] Tags => [
         ItemTag.Damage,
         ItemTag.FoodRelated,
-        ItemTag.CanBeTemporary
+        ItemTag.CanBeRental,
+        ItemTag.WorldUnique,
+        ItemTag.CanBeTemporary,
+        ItemTag.ExtractorUnitBlacklist
     ];
 
     protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("grilledLizardKebabModel");
     protected override Sprite PickupIconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texGrilledLizardKebabIcon");
-    protected override string PickupText => "Increases base damage and spawns a spectral Lemurian that inherits damage bonuses. It's still sizzling.";
+    protected override string PickupText => "Increases base damage and spawns a spectral Lemurian that inherits damage. It's still sizzling.";
     protected override string Description => FuseText([
         string.Format("Increase base damage by " + "{0}%".Style(FontColor.cIsDamage) + " ({1}% per stack)".Style(FontColor.cStack).OptText(PluginConfig.Kebab_Stack_Damage.Value > 0) + ". ",
             RoundVal(PluginConfig.Kebab_Base_Damage.Value), RoundVal(PluginConfig.Kebab_Stack_Damage.Value).SignVal()),
         
-        string.Format("Gain a spectral Lemurian that inherits " + "{0}% ".Style(FontColor.cIsDamage) + "of your " + "damage bonuses".Style(FontColor.cIsDamage) + ".",
+        string.Format("Gain a spectral Lemurian that inherits " + "{0}% ".Style(FontColor.cIsDamage) + "of your " + "damage stat".Style(FontColor.cIsDamage) + ".",
             RoundVal(PluginConfig.Kebab_Lem_Damage.Value))
     ]);
     protected override string DisplayName => "Grilled Lizard Kebab";
 
     public static GameObject devotedLemMaster;
+    public static DeployableSlot spectralLemSlot;
     protected override void Initialize()
     {
         ItemDef = Value;
+
+        spectralLemSlot = DeployableAPI.RegisterDeployableSlot(GetSpectralLemSlotLimit);
 
         devotedLemMaster = CreateLemurianMaster();
         RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
 
         RecipeCatalogChef.AddRecipe(PrimitiveClawsItem.ItemDef.name, "GhostOnKill", Name);
     }
+    private static int GetSpectralLemSlotLimit(CharacterMaster master, int countMultiplier) => PluginConfig.Kebab_Lem_Cap.Value;
     private GameObject CreateLemurianMaster()
     {
         GameObject masterPrefab = UnityEngine.AddressableAssets.Addressables.LoadAssetAsync<GameObject>(RoR2_CU8_LemurianEgg.DevotedLemurianMaster_prefab).WaitForCompletion().InstantiateClone("SpectralLemurian");
@@ -87,6 +95,8 @@ public class GrilledLizardKebabItem : ItemBase
 
         UnityEngine.Object.Destroy(masterPrefab.GetComponent<DevotedLemurianController>());
 
+        masterPrefab.AddComponent<Deployable>();
+
         return masterPrefab;
     }
     private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
@@ -110,6 +120,78 @@ public class GrilledLizardKebabItem : ItemBase
     }
 }
 
+public class GrilledLizardKebabBehavior : BaseItemBodyBehavior
+{
+    [ItemDefAssociation(useOnServer = true, useOnClient = false)]
+    public static ItemDef GetItemDef() => GrilledLizardKebabItem.ItemDef;
+
+    private CharacterMaster characterMaster;
+
+    public void OnEnable()
+    {
+        characterMaster = body.master;
+    }
+    public void FixedUpdate()
+    {
+        if (!NetworkServer.active || !characterMaster)
+            return;
+
+        int deployLimit = characterMaster.GetDeployableSameSlotLimit(GrilledLizardKebabItem.spectralLemSlot);
+        int deployCount = characterMaster.GetDeployableCount(GrilledLizardKebabItem.spectralLemSlot);
+
+        if (deployCount > 0)
+        {
+
+        }
+
+        if (deployCount < deployLimit)
+        {
+            MasterSummon lemSummon = new()
+            {
+                masterPrefab = GrilledLizardKebabItem.devotedLemMaster,
+                position = body.transform.position + Vector3.up * 5f,
+                rotation = body.transform.rotation,
+                summonerBodyObject = body.gameObject,
+                useAmbientLevel = true
+            };
+
+            CharacterMaster lemMaster = lemSummon.Perform();
+            if (lemMaster)
+            {
+                CharacterBody lemBody = lemMaster.GetBody();
+                lemBody.AddBuff(RoR2Content.Buffs.HiddenInvincibility);
+                lemBody.AddBuff(RoR2Content.Buffs.Intangible);
+                lemBody.AddBuff(SpectralBuff.BuffDef);
+                lemBody.transform.localScale *= 1.65f;
+
+                characterMaster.AddDeployable(lemMaster.GetComponent<Deployable>(), GrilledLizardKebabItem.spectralLemSlot);
+            }
+        }
+    }
+    public void OnDisable()
+    {
+        if (!NetworkServer.active || !characterMaster)
+            return;
+
+        foreach (DeployableInfo info in characterMaster.deployablesList)
+        {
+            if (info.slot == GrilledLizardKebabItem.spectralLemSlot)
+            {
+                CharacterMaster lemMaster = info.deployable.gameObject.GetComponent<CharacterMaster>();
+
+                if (lemMaster)
+                {
+                    lemMaster.TrueKill();
+                    Destroy(lemMaster.gameObject);
+                }
+
+                info.deployable.DestroyGameObject();
+            }
+        }
+    }
+}
+
+/*
 public class GrilledLizardKebabBehavior : BaseItemBodyBehavior
 {
     [ItemDefAssociation(useOnServer = true, useOnClient = false)]
@@ -175,3 +257,4 @@ public class GrilledLizardKebabBehavior : BaseItemBodyBehavior
         spectralLemurians.Clear();
     }
 }
+*/

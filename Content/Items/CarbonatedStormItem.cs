@@ -23,7 +23,10 @@ public class CarbonatedStormItem : ItemBase
         ItemTag.Utility,
         ItemTag.Healing,
         ItemTag.FoodRelated,
-        ItemTag.CanBeTemporary
+        ItemTag.CanBeRental,
+        ItemTag.WorldUnique,
+        ItemTag.CanBeTemporary,
+        ItemTag.ExtractorUnitBlacklist
     ];
 
     protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("carbonatedStormModel");

@@ -16,6 +16,7 @@ namespace ChefOvercooked
     [BepInDependency(PrefabAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(ExecuteAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(LanguageAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
+    [BepInDependency(DeployableAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(RecalculateStatsAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
 
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]

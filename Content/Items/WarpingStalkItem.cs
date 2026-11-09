@@ -20,6 +20,7 @@ public class WarpingStalkItem : ItemBase
         ItemTag.CanBeRental,
         ItemTag.FoodRelated,
         ItemTag.AIBlacklist,
+        ItemTag.CanBeTemporary,
         ItemTag.BrotherBlacklist
     ];
 

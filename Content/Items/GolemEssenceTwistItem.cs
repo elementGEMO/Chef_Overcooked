@@ -22,7 +22,10 @@ public class GolemEssenceTwistItem : ItemBase
         ItemTag.Healing,
         ItemTag.Utility,
         ItemTag.FoodRelated,
-        ItemTag.CanBeTemporary
+        ItemTag.CanBeRental,
+        ItemTag.WorldUnique,
+        ItemTag.CanBeTemporary,
+        ItemTag.ExtractorUnitBlacklist
     ];
 
     protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("golemEssenceTwistModel");

@@ -4,17 +4,19 @@ using R2API;
 using System;
 using UnityEngine.AddressableAssets;
 using RoR2BepInExPack.GameAssetPaths.Version_1_35_0;
+using MonoMod.Cil;
+using Mono.Cecil.Cil;
 
 namespace ChefOvercooked;
 public class SpectralBuff : BuffBase
 {
     protected override string Name => "Spectral";
     public static BuffDef BuffDef;
-    protected override bool IsStackable => true;
 
     private static Material OverlayMatOne;
     private static Material OverlayMatTwo;
     private static Material OverlayMatThree;
+    private static Material InvisMat;
 
     protected override void Initialize()
     {
@@ -24,8 +26,8 @@ public class SpectralBuff : BuffBase
 
         IL.RoR2.CharacterModel.UpdateOverlays += (il) => OverlayHelper.UpdateOverlayHook(new(il), BuffDef, [OverlayMatOne, OverlayMatTwo, OverlayMatThree]);
         IL.RoR2.CharacterModel.UpdateOverlayStates += (il) => OverlayHelper.UpdateOverlayStateHook(new(il), BuffDef, 3);
+        IL.RoR2.CharacterModel.UpdateRendererMaterials += CharacterModel_UpdateRendererMaterials;
 
-        On.RoR2.CharacterModel.UpdateOverlays += OnCharacterModel_UpdateOverlays;
         RecalculateStatsAPI.GetStatCoefficients += RecalculateStatsAPI_GetStatCoefficients;
     }
 
@@ -34,22 +36,57 @@ public class SpectralBuff : BuffBase
         OverlayMatOne = new(Addressables.LoadAssetAsync<Material>(RoR2_DLC3_Items_WyrmOnHit.matWyrmProjectile1_mat).WaitForCompletion());
         OverlayMatTwo = new(Addressables.LoadAssetAsync<Material>(RoR2_DLC3_Items_WyrmOnHit.matWyrmProjectile2_mat).WaitForCompletion());
         OverlayMatThree = new(Addressables.LoadAssetAsync<Material>(RoR2_DLC3_Items_WyrmOnHit.matWyrmProjectile3_mat).WaitForCompletion());
+
+        InvisMat = new(Addressables.LoadAssetAsync<Material>(RoR2_Base_Common.matCloakedEffect_mat).WaitForCompletion());
     }
     private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
     {
-        args.baseDamageAdd += Math.Max(0, sender.GetBuffCount(BuffDef) - 1) * PluginConfig.Kebab_Lem_Damage.Value / 100;
+        if (!sender.HasBuff(BuffDef) || !sender.master)
+            return;
+
+        args.attackSpeedMultAdd += 0.15f;
+        args.moveSpeedMultAdd += 0.14f;
+
+        Deployable deployable       = sender.master.GetComponent<Deployable>();
+        CharacterMaster ownerMaster = deployable ? deployable.ownerMaster : null;
+        CharacterBody masterBody    = ownerMaster ? ownerMaster.GetBody() : null;
+
+        if (!ownerMaster)
+            return;
+
+        args.baseDamageAdd += masterBody.damage * PluginConfig.Kebab_Base_Damage.Value / 100f;
     }
-
-    private void OnCharacterModel_UpdateOverlays(On.RoR2.CharacterModel.orig_UpdateOverlays orig, CharacterModel self)
+    private void CharacterModel_UpdateRendererMaterials(ILContext il)
     {
-        orig(self);
+        ILCursor cursor = new(il);
 
-        if (self.body)
+        int matIndex = -1;
+
+        cursor.TryGotoNext(
+            x => x.MatchLdnull(),
+            x => x.MatchStloc(out matIndex)
+        );
+
+        if (matIndex != -1 && cursor.TryGotoNext(
+            MoveType.AfterLabel,
+            x => x.MatchBr(out _),
+            x => x.MatchLdarg(0),
+            x => x.MatchLdfld(typeof(CharacterModel), nameof(CharacterModel.particleMaterialOverride))
+        ))
         {
-            if (self.body.HasBuff(BuffDef) && self.visibility != VisibilityLevel.Invisible)
-                self.visibility = VisibilityLevel.Revealed;
-        }
+            cursor.Emit(OpCodes.Ldarg_0);
+            cursor.Emit(OpCodes.Ldloc, matIndex);
 
-        //if (self.body.HasBuff(BuffDef)) self.visibility = VisibilityLevel.Revealed;
+            cursor.EmitDelegate<Func<CharacterModel, Material, Material>>((self, material) =>
+            {
+                if (self.body && self.body.HasBuff(BuffDef))
+                    return InvisMat;
+
+                return material;
+            });
+
+            cursor.Emit(OpCodes.Stloc, matIndex);
+        }
+        else Log.Error("STALKBUFF_MATERIAL failed to ILHook");
     }
 }

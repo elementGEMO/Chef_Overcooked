@@ -19,7 +19,10 @@ public class BloodCandiedEyeItem : ItemBase
     protected override ItemTag[] Tags => [
         ItemTag.Damage,
         ItemTag.FoodRelated,
-        ItemTag.CanBeTemporary
+        ItemTag.CanBeRental,
+        ItemTag.WorldUnique,
+        ItemTag.CanBeTemporary,
+        ItemTag.ExtractorUnitBlacklist
     ];
 
     protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("bloodCandiedEyeModel");
@@ -130,6 +133,12 @@ public class BloodCandiedEyeBehavior : BaseItemBodyBehavior
 
     public void OnEnable()
     {
+        var tags = DLC3Content.Items.UltimateMeal.tags;
+        foreach (ItemTag tag in tags)
+        {
+            Log.Info(tag);
+        }
+
         slowField       = Instantiate(BloodCandiedEyeItem.ProjectilePrefab, body.transform);
         areaVisual      = slowField.transform.Find("AreaIndicator");
         collision       = slowField.GetComponent<SphereCollider>();

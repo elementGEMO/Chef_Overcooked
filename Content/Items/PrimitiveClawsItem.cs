@@ -17,6 +17,7 @@ public class PrimitiveClawsItem : ItemBase
         ItemTag.AllowedForUseAsCraftingIngredient,
         ItemTag.Damage,
         ItemTag.FoodRelated,
+        ItemTag.CanBeRental,
         ItemTag.CanBeTemporary
     ];
     protected override bool IsRemovable => true;
