@@ -136,29 +136,6 @@ public class CookingState : GenericCharacterMain
     private PickupIndex RandomPickupIndex()
     {
         return WeightedMealItemDefs.Count > 0 ? PickupCatalog.FindPickupIndex(WeightedMealItemDefs[Random.Range(0, WeightedMealItemDefs.Count)].itemIndex) : PickupCatalog.FindPickupIndex(RoR2Content.Items.ExtraLifeConsumed.itemIndex);
-
-        /*
-        // Set paramter as CharacterBody characterBody = null
-        
-        PlayerStatsComponent playerStats    = characterBody ? PlayerStatsComponent.FindBodyStatsComponent(characterBody) : null;
-        NetworkUser playerUser              = playerStats.playerCharacterMasterController ? playerStats.playerCharacterMasterController.networkUser : null;
-        UserProfile playerProfile           = playerUser ? playerUser.localUser.userProfile : null;
-
-        if (characterBody == null || playerProfile == null)
-            return PickupCatalog.FindPickupIndex(WeightedMealItemDefs[Random.Range(0, WeightedMealItemDefs.Count)].itemIndex);
-
-        HG.ListPool<PickupIndex>.RentCollection(out List<PickupIndex> localMealItems);
-
-        foreach (ItemDef itemDef in WeightedMealItemDefs)
-        {
-            PickupIndex pickupIndex = PickupCatalog.FindPickupIndex(itemDef.itemIndex);
-
-            if (playerProfile.HasDiscoveredPickup(pickupIndex))
-                localMealItems.Add(pickupIndex);
-        }
-        */
-
-        //return localMealItems.Count > 0 ? localMealItems[Random.Range(0, localMealItems.Count)] : PickupCatalog.FindPickupIndex(RoR2Content.Items.ExtraLifeConsumed.itemIndex);
     }
 
     public override void OnEnter()
@@ -240,10 +217,6 @@ public class CookingState : GenericCharacterMain
         {
             outer.SetNextStateToMain();
         }
-    }
-    public override void OnSerialize(NetworkWriter writer)
-    {
-        base.OnSerialize(writer);
     }
     public override InterruptPriority GetMinimumInterruptPriority() => InterruptPriority.Death;
 }
