@@ -16,7 +16,7 @@ public class SpectralBuff : BuffBase
     private static Material OverlayMatOne;
     private static Material OverlayMatTwo;
     private static Material OverlayMatThree;
-    private static Material InvisMat;
+    private static Material InvisMat = ChefOverCookedPlugin.Bundle.LoadAsset<Material>("matInvis");
 
     protected override void Initialize()
     {
@@ -36,8 +36,6 @@ public class SpectralBuff : BuffBase
         OverlayMatOne = new(Addressables.LoadAssetAsync<Material>(RoR2_DLC3_Items_WyrmOnHit.matWyrmProjectile1_mat).WaitForCompletion());
         OverlayMatTwo = new(Addressables.LoadAssetAsync<Material>(RoR2_DLC3_Items_WyrmOnHit.matWyrmProjectile2_mat).WaitForCompletion());
         OverlayMatThree = new(Addressables.LoadAssetAsync<Material>(RoR2_DLC3_Items_WyrmOnHit.matWyrmProjectile3_mat).WaitForCompletion());
-
-        InvisMat = new(Addressables.LoadAssetAsync<Material>(RoR2_Base_Common.matCloakedEffect_mat).WaitForCompletion());
     }
     private void RecalculateStatsAPI_GetStatCoefficients(CharacterBody sender, RecalculateStatsAPI.StatHookEventArgs args)
     {

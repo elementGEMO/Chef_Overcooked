@@ -5,18 +5,16 @@ using UnityEngine;
 namespace ChefOvercooked;
 public static class PluginConfig
 {
-    public enum ItemOptions
-    {
-        FoodTier,
-        Ingredients,
-        Both
-    }
+    public enum ItemOptions { FoodTier, Ingredients, Both }
+    public enum DistributorColor { Orange, Blue, White }
 
-    // General Configs
+    // // General Configs
     public static ConfigEntry<bool> Set_Default;
     public static ConfigEntry<int> Round_To;
 
-    // Chef Special Configs
+    // // Skill Configs
+
+    // Cook Special Configs
     public static ConfigEntry<ItemOptions> FoodDrops;
 
     public static ConfigEntry<int> Attack_Instances;
@@ -29,7 +27,7 @@ public static class PluginConfig
     public static ConfigEntry<float> Execute_Leniency;
     public static ConfigEntry<float> Temp_Duration;
 
-    // Item Configs
+    // // Item Configs
 
     // Primitive Claws
     public static ConfigEntry<float> Claw_Base_Bleed;
@@ -72,11 +70,22 @@ public static class PluginConfig
     public static ConfigEntry<float> Stalk_Duration_Stack;
     public static ConfigEntry<bool> Stalk_Luck_Affected;
 
+    // // Misc Configs
+
+    // Meal Distributor Variant Configs
+    public static ConfigEntry<DistributorColor> Distributor_Color;
+    public static ConfigEntry<bool> Do_Meal_Weight;
+
+    public static ConfigEntry<float> Distribute_Temp_Duration;
+    public static ConfigEntry<float> Distributor_Chance;
+    public static ConfigEntry<float> Cost_Multiplier;
+
     public static void Init()
     {
         GeneralInit();
         SkillInit();
         ItemInit();
+        MiscInit();
     }
 
     private static void GeneralInit()
@@ -137,8 +146,8 @@ public static class PluginConfig
         ).PostConfig(MathProcess.Max, 0);
 
         Temp_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
-            token, "Temp Food Stack", 0.5f,
-            "[ One Temporary Food item is worth # compared to one stack ]"
+            token, "Temp Meal Stack", 0.5f,
+            "[ One Temporary Meal item is worth # compared to one stack ]"
         ).PostConfig(MathProcess.Max, 0);
     }
     private static void ItemInit()
@@ -291,6 +300,35 @@ public static class PluginConfig
             stalkToken, "Affected by Luck", false,
             "[ If Luck should affect the Nullify chance ]"
         ).PostConfig();
+    }
+    private static void MiscInit()
+    {
+        string distributorToken = "Interactable - Meal Distributor";   // Temporary Meal Distributor Configs
+
+        Distributor_Color = ChefOverCookedPlugin.Instance.Config.Bind(
+            distributorToken, "Variant Color", DistributorColor.Orange,
+            "[ Which color the Meal Distributor should be ]"
+        ).PostConfig();
+
+        Do_Meal_Weight = ChefOverCookedPlugin.Instance.Config.Bind(
+            distributorToken, "Distribute Weighted", true,
+            "[ Makes harder to acquire Meal items rarer in Meal Distributors ]"
+        ).PostConfig();
+
+        Distribute_Temp_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
+            distributorToken, "Temp Meal Stack", 1f,
+            "[ One Temporary Meal item is worth # compared to one stack ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Distributor_Chance = ChefOverCookedPlugin.Instance.Config.Bind(
+            distributorToken, "Variant Chance", 50f,
+            "[ #% for a Temporary Item Distributor to become a Temporary Meal Distributor ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Cost_Multiplier = ChefOverCookedPlugin.Instance.Config.Bind(
+            distributorToken, "Variant Cost Multiplier", 2f,
+            "[ #x the cost, with the standard being 25 gold ]"
+        ).PostConfig(MathProcess.Max, 0);
     }
     public enum MathProcess
     {

@@ -21,7 +21,7 @@ public class StalkBuff : BuffBase
 
     private static EffectDef StalkEffect;
     private static Material OverlayMat;
-    private static Material InvisMat;
+    private static Material InvisMat = ChefOverCookedPlugin.Bundle.LoadAsset<Material>("matInvis");
 
     protected override void Initialize()
     {
@@ -116,8 +116,6 @@ public class StalkBuff : BuffBase
         OverlayMat.SetVector("_CutoffScroll", new Vector2(1, 10));
 
         OverlayMat.SetFloat("_Boost", 2f);
-
-        InvisMat = new(Addressables.LoadAssetAsync<Material>(RoR2_Base_Common.matCloakedEffect_mat).WaitForCompletion());
 
         GameObject effectPrefab = Addressables.LoadAssetAsync<GameObject>(RoR2_Base_Imp.ImpBlinkEffect_prefab).WaitForCompletion().InstantiateClone("StalkBlinkEffect");
 

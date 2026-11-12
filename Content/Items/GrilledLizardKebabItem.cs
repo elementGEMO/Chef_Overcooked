@@ -1,12 +1,8 @@
-﻿using EntityStates;
-using R2API;
+﻿using R2API;
 using RoR2;
 using RoR2.CharacterAI;
 using RoR2.Items;
 using RoR2BepInExPack.GameAssetPathsBetter;
-using System;
-using System.Collections.Generic;
-using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 

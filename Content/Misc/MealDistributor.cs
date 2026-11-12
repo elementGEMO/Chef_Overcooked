@@ -13,24 +13,63 @@ namespace ChefOvercooked;
 
 public class MealDistributor
 {
+    private static List<CookingState.MealWeight> RunMealItemDefs;
+    private static List<ItemDef> WeightedMealItemDefs;
     public MealDistributor()
     {
         MealDistributorVariant.CreateMaterial();
+
+        Run.onRunStartGlobal += Run_onRunStartGlobal;
 
         IL.RoR2.PickupDistributorBehavior.Start += PickupDistributorBehavior_Start;
 
         On.RoR2.PickupDistributorBehavior.GenerateNewPickupServer_bool += PickupDistributorBehavior_GenerateNewPickupServer_bool;
         On.RoR2.PickupDistributorBehavior.Drop += PickupDistributorBehavior_Drop;
+        On.RoR2.PickupDistributorBehavior.RerollPickup += PickupDistributorBehavior_RerollPickup;
     }
 
-    private PickupIndex GeneratePickUp(Xoroshiro128Plus rng = null)
+    private void PickupDistributorBehavior_RerollPickup(On.RoR2.PickupDistributorBehavior.orig_RerollPickup orig, PickupDistributorBehavior self)
     {
-        List<ItemIndex> mealItems = [];
+        if (self.gameObject.GetComponent<MealDistributorVariant>())
+        {
+            UniquePickup newPickup = UniquePickup.none;
+            newPickup.pickupIndex = GeneratePickUp(self.rng);
+
+            self.SetPickup(newPickup);
+            self.UpdatePickupDisplays();
+        }
+        else orig(self);
+    }
+
+    private void Run_onRunStartGlobal(Run instance)
+    {
+        RunMealItemDefs         = [];
+        WeightedMealItemDefs    = [];
 
         foreach (ItemDef itemDef in ItemCatalog.allItemDefs)
-            if (itemDef.tier == ItemTier.FoodTier && itemDef != MonsterMeatItem.ItemDef) mealItems.Add(itemDef.itemIndex);
+        {
+            if (itemDef == null) continue;
+            if (!instance.IsItemAvailable(itemDef.itemIndex)) continue;
+            if (itemDef.tier != ItemTier.FoodTier) continue;
+            if (itemDef == MonsterMeatItem.ItemDef) continue;
 
-        return PickupCatalog.FindPickupIndex(mealItems[rng.RangeInt(0, mealItems.Count)]);
+            RunMealItemDefs.Add(new CookingState.MealWeight(itemDef));
+        }
+
+        if (PluginConfig.Do_Meal_Weight.Value && RunMealItemDefs.Count > 0)
+            WeightedMealItemDefs = CookingState.MealWeight.PopulateWeights(RunMealItemDefs);
+    }
+
+    private PickupIndex GeneratePickUp(Xoroshiro128Plus rng)
+    {
+        if (RunMealItemDefs.Count > 0 && !PluginConfig.Do_Meal_Weight.Value)
+            return PickupCatalog.FindPickupIndex(RunMealItemDefs[rng.RangeInt(0, RunMealItemDefs.Count)].itemDef.itemIndex);
+
+        if (WeightedMealItemDefs.Count > 0)
+            return PickupCatalog.FindPickupIndex(WeightedMealItemDefs[rng.RangeInt(0, WeightedMealItemDefs.Count)].itemIndex);
+
+        Log.Error("Could not pick a Meal item for Meal Distributor");
+        return PickupIndex.none;
     }
 
     private void PickupDistributorBehavior_Start(ILContext il)
@@ -46,7 +85,7 @@ public class MealDistributor
 
             cursor.EmitDelegate<Action<PickupDistributorBehavior>>(self =>
             {
-                if (self.rng.RangeFloat(0f, 1f) < 0.5)
+                if (self.rng.RangeFloat(0f, 1f) < PluginConfig.Distributor_Chance.Value / 100)
                 {
                     self.gameObject.AddComponent<MealDistributorVariant>();
                     self.baseDropAmount = 3;
@@ -66,7 +105,7 @@ public class MealDistributor
             newPickup.pickupIndex = GeneratePickUp(self.rng);
 
             if (self.tempPickups)
-                newPickup.decayValue = 1f;
+                newPickup.decayValue = PluginConfig.Distribute_Temp_Duration.Value;
 
             self.SetPickup(newPickup, newHidden);
         }
@@ -90,15 +129,37 @@ public class MealDistributor
         {
             MealMaterial = new(Addressables.LoadAssetAsync<Material>(RoR2_DLC3_TemporaryItemsDistributor.matTempItemDist_mat).WaitForCompletion());
 
-            MealMaterial.SetTexture("_MainTex", ChefOverCookedPlugin.Bundle.LoadAsset<Texture>("texMealDistributeDiffuse"));
-            MealMaterial.SetTexture("_EmTex", ChefOverCookedPlugin.Bundle.LoadAsset<Texture>("texMealDistributeEmissive"));
+            if (PluginConfig.Distributor_Color.Value == PluginConfig.DistributorColor.Blue)
+                return;
+
+            if (PluginConfig.Distributor_Color.Value == PluginConfig.DistributorColor.Orange)
+                MealMaterial.SetTexture("_MainTex", ChefOverCookedPlugin.Bundle.LoadAsset<Texture2D>("texMealDistributeDiffuse"));
+
+            if (PluginConfig.Distributor_Color.Value == PluginConfig.DistributorColor.White)
+                MealMaterial.SetTexture("_MainTex", ChefOverCookedPlugin.Bundle.LoadAsset<Texture2D>("texMealDistributeDiffuseAlt"));
+
+            MealMaterial.SetTexture("_EmTex", ChefOverCookedPlugin.Bundle.LoadAsset<Texture2D>("texMealDistributeEmissive"));
+            MealMaterial.SetTexture("_SplatmapTex", Addressables.LoadAssetAsync<Texture2D>(RoR2_DLC1_RegeneratingScrap.texRegeneratingScrapSplatMap_png).WaitForCompletion());
+            MealMaterial.SetTexture("_GreenChannelTex", Addressables.LoadAssetAsync<Texture2D>(RoR2_Base_Common_TiledTextures.texTileRustyMetal_tif).WaitForCompletion());
+
+            MealMaterial.EnableKeyword("SPLATMAP");
+            MealMaterial.EnableKeyword("FORCE_SPEC");
+
+            MealMaterial.SetFloat("_SpecularStrength", 0.118f);
+            MealMaterial.SetFloat("_SpecularExponent", 1.25f);
+            MealMaterial.SetFloat("_SplatmapTileScale", 1.25f);
+            MealMaterial.SetFloat("_GreenChannelBias", -0.48f);
+            MealMaterial.SetFloat("_BlueChannelBias", -2f);
+            MealMaterial.SetFloat("_Depth", 0f);
+
+            MealMaterial.globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
         }
         public void Awake()
         {
             PurchaseInteraction purchase = gameObject.GetComponent<PurchaseInteraction>();
 
             if (purchase)
-                purchase.Networkcost *= 2;
+                purchase.Networkcost = Mathf.CeilToInt(purchase.Networkcost * PluginConfig.Cost_Multiplier.Value);
 
             Transform baseTransform = gameObject.transform.Find("mdlTempItemDistributer");
             GameObject interactMesh = baseTransform.Find("mshTemporaryItemDistributer").gameObject;

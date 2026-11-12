@@ -11,7 +11,7 @@ public class CookingState : GenericCharacterMain
     private static List<MealWeight> RunMealItemDefs;
     private static List<ItemDef> WeightedMealItemDefs;
 
-    private class MealWeight(ItemDef itemDef)
+    public class MealWeight(ItemDef itemDef)
     {
         public ItemDef itemDef = itemDef;
 
@@ -49,6 +49,20 @@ public class CookingState : GenericCharacterMain
             }
 
             return 4;
+        }
+        public static List<ItemDef> PopulateWeights(List<MealWeight> array, bool debug = false)
+        {
+            List<ItemDef> weightedMeals = [];
+
+            foreach (MealWeight item in array)
+            {
+                if (debug)
+                    Log.Info(string.Format("Cook Item Pool - {0} ... {1}x", item.itemDef.name, item.GetFrequency()));
+
+                for (int i = 0; i < item.GetFrequency(); i++) weightedMeals.Add(item.itemDef);
+            }
+
+            return weightedMeals;
         }
     }
 
@@ -127,11 +141,7 @@ public class CookingState : GenericCharacterMain
             }
         }
 
-        foreach (MealWeight item in RunMealItemDefs)
-        {
-            Log.Info(string.Format("Cook Item Pool - {0} ... {1}x", item.itemDef.name, item.GetFrequency()));
-            for (int i = 0; i < item.GetFrequency(); i++) WeightedMealItemDefs.Add(item.itemDef);
-        }
+        WeightedMealItemDefs = MealWeight.PopulateWeights(RunMealItemDefs, true);
     }
     private PickupIndex RandomPickupIndex()
     {
