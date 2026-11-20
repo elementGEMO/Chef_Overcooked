@@ -20,7 +20,6 @@ public class PrimitiveClawsItem : ItemBase
         ItemTag.CanBeRental,
         ItemTag.CanBeTemporary
     ];
-    protected override bool IsRemovable => true;
 
     protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("primitiveClawsModel");
     protected override Sprite PickupIconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texPrimitiveClawsIcon");

@@ -6,6 +6,7 @@ using ShaderSwapper;
 using RoR2.ExpansionManagement;
 using RoR2BepInExPack.GameAssetPaths.Version_1_35_0;
 using UnityEngine.AddressableAssets;
+using System.Collections.Generic;
 
 [assembly: HG.Reflection.SearchableAttribute.OptIn]
 
@@ -19,6 +20,8 @@ namespace ChefOvercooked
     [BepInDependency(DeployableAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
     [BepInDependency(RecalculateStatsAPI.PluginGUID, BepInDependency.DependencyFlags.HardDependency)]
 
+    [BepInDependency(AncientScepter.AncientScepterMain.ModGuid, BepInDependency.DependencyFlags.SoftDependency)]
+
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     public class ChefOverCookedPlugin : BaseUnityPlugin
     {
@@ -27,9 +30,10 @@ namespace ChefOvercooked
         public const string PluginName = "Chef_Overcooked";
         public const string PluginVersion = "1.3.0";
 
-        public static ExpansionDef AlloyedCollective { get; private set; }
         public static ChefOverCookedPlugin Instance { get; private set; }
         public static AssetBundle Bundle { get; private set; }
+        public static ExpansionDef AlloyedCollective { get; private set; }  // Alloyed Collective Dependency
+        public static List<string> ActiveCompats;
 
         public static readonly string TokenPrefix = "GEMO_CHEF_OVERCOOKED_";
 
@@ -40,8 +44,17 @@ namespace ChefOvercooked
             PluginConfig.Init();
             Log.Init(Logger);
 
+            CheckSoftCompat();
             CreateContent();
             RecipeCatalogChef.Init();
+        }
+
+        private void CheckSoftCompat()
+        {
+            ActiveCompats = [];
+
+            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(AncientScepter.AncientScepterMain.ModGuid))
+                ActiveCompats.Add(AncientScepter.AncientScepterMain.ModGuid);
         }
 
         private void CreateContent()
@@ -59,6 +72,7 @@ namespace ChefOvercooked
 
             new CookDamageType();
             new SpecialCookSkill();
+            new SpecialScepterCookSkill();  // Scepter Upgrade for Cook
         }
 
         private void CreateItems()
@@ -100,5 +114,7 @@ namespace ChefOvercooked
             Bundle = AssetBundle.LoadFromFile(Path.Combine(Directory.GetParent(Info.Location)!.ToString(), "chefovercooked"));
             StartCoroutine(Bundle.UpgradeStubbedShadersAsync());
         }
+
+        public static bool PluginLoaded(string modGUID) => ActiveCompats.Contains(modGUID);
     }
 }

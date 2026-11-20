@@ -179,7 +179,7 @@ public class CookDamageType
         GenericSkill genericSpecial = viewerBody.skillLocator ? viewerBody.skillLocator.special : null;
         SkillDef specialSkill       = genericSpecial ? genericSpecial.skillDef : null;
 
-        if (specialSkill != SpecialCookSkill.SkillDef)
+        if (specialSkill != SpecialCookSkill.SkillDef && specialSkill != SpecialScepterCookSkill.SkillDef)
             return;
 
         executeFractionAdd = Mathf.Clamp(executeFractionAdd, PluginConfig.Execute_Threshold.Value, 1f);
@@ -226,7 +226,7 @@ public class CookDamageType
         public override void Begin()
         {
             chefBody = target.healthComponent ? target.healthComponent.body : null;
-            travelDuration = UnityEngine.Random.Range(1f, 1.5f);
+            travelDuration = UnityEngine.Random.Range(1f, 1.5f) / Mathf.Pow(chefBody.attackSpeed, PluginConfig.Attack_Speed_Effectiveness.Value / 100);
 
             GameObject previousPrefab = orbEffectPrefab;
             orbEffectPrefab = MeatEffect;
@@ -245,7 +245,7 @@ public class CookDamageType
                 UserProfile userProfile = chefBody.master?.playerCharacterMasterController?.networkUser?.localUser?.userProfile;
                 userProfile?.DiscoverPickup(PickupCatalog.FindPickupIndex(MonsterMeatItem.ItemDef.itemIndex));
 
-                chefBody.AddTimedBuff(MeatTimerBuff.BuffDef, 1.75f);
+                chefBody.AddTimedBuff(MeatTimerBuff.BuffDef, 1.75f / Mathf.Pow(chefBody.attackSpeed, PluginConfig.Attack_Speed_Effectiveness.Value / 100));
             }
         }
     }

@@ -10,7 +10,7 @@ using static HelperFontColor;
 
 public class ConsumedChefEquip : EquipmentBase
 {
-    protected override ExpansionDef RequiredExpansion => Addressables.LoadAssetAsync<ExpansionDef>(RoR2_DLC3.DLC3_asset).WaitForCompletion();
+    protected override ExpansionDef RequiredExpansion => ChefOverCookedPlugin.AlloyedCollective;
     protected override string Name => "ConsumedChefEquip";
     public static EquipmentDef EquipmentDef;
     protected override float Cooldown => 70f;

@@ -28,6 +28,12 @@
     <PackageReference Include="Smooth_Salad-ShaderSwapper" Version="1.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="AncientScepter">
+      <HintPath>..\Libraries\AncientScepter.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
   <PropertyGroup>
     <NoWarn>$(NoWarn);CS0618</NoWarn>
     <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>

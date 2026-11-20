@@ -24,8 +24,6 @@ public class WarpingStalkItem : ItemBase
         ItemTag.BrotherBlacklist
     ];
 
-    protected override bool IsRemovable => true;
-
     protected override GameObject PickupModelPrefab => ChefOverCookedPlugin.Bundle.LoadAsset<GameObject>("warpingStalkModel");
     protected override Sprite PickupIconSprite => ChefOverCookedPlugin.Bundle.LoadAsset<Sprite>("texWarpingStalkIcon");
     protected override string PickupText => "Chance to nullify incoming damage, and fade briefly into the Red Plane.";

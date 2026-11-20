@@ -22,10 +22,16 @@ public static class PluginConfig
     public static ConfigEntry<float> Proc_Coefficient;
     public static ConfigEntry<float> Attack_Rate;
     public static ConfigEntry<float> Radius;
+    public static ConfigEntry<float> Attack_Speed_Effectiveness;
 
     public static ConfigEntry<float> Execute_Threshold;
     public static ConfigEntry<float> Execute_Leniency;
     public static ConfigEntry<float> Temp_Duration;
+    public static ConfigEntry<float> Radius_Effectiveness;
+
+    // Scepter Cook Special Configs
+    public static ConfigEntry<float> Attack_Instances_Scepter;
+    public static ConfigEntry<float> Damage_Coefficient_Scepter;
 
     // // Item Configs
 
@@ -148,6 +154,28 @@ public static class PluginConfig
         Temp_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
             token, "Temp Meal Stack", 0.5f,
             "[ One Temporary Meal item is worth # compared to one stack ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Attack_Speed_Effectiveness = ChefOverCookedPlugin.Instance.Config.Bind(
+            token, "Attack Speed Efficiency", 50f,
+            "[ #% approximate effectiveness for the Attack Speed on this Skill ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        // Scepter
+
+        Attack_Instances_Scepter = ChefOverCookedPlugin.Instance.Config.Bind(
+            token + " - Scepter", "Attack Count Multiplier", 2f,
+            "[ #x the Amount of Times this Skill will deal damage ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Damage_Coefficient_Scepter = ChefOverCookedPlugin.Instance.Config.Bind(
+            token + " - Scepter", "Damage Number Multiplier", 1f,
+            "[ #x of Base Damage for this Skill to Deal per Attack ]"
+        ).PostConfig(MathProcess.Max, 0);
+
+        Radius_Effectiveness = ChefOverCookedPlugin.Instance.Config.Bind(
+            token + " - Scepter", "Attack Speed to Radius", 75f,
+            "[ #% approximate effectiveness for the Attack Speed to Radius scaling on this Skill ]"
         ).PostConfig(MathProcess.Max, 0);
     }
     private static void ItemInit()

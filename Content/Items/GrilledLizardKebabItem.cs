@@ -159,6 +159,7 @@ public class GrilledLizardKebabBehavior : BaseItemBodyBehavior
                 lemBody.AddBuff(RoR2Content.Buffs.Intangible);
                 lemBody.AddBuff(SpectralBuff.BuffDef);
                 lemBody.transform.localScale *= 1.65f;
+                lemBody.baseNameToken = "Spectral Lemurian";
 
                 characterMaster.AddDeployable(lemMaster.GetComponent<Deployable>(), GrilledLizardKebabItem.spectralLemSlot);
             }
@@ -186,71 +187,3 @@ public class GrilledLizardKebabBehavior : BaseItemBodyBehavior
         }
     }
 }
-
-/*
-public class GrilledLizardKebabBehavior : BaseItemBodyBehavior
-{
-    [ItemDefAssociation(useOnServer = true, useOnClient = false)]
-    public static ItemDef GetItemDef() => GrilledLizardKebabItem.ItemDef;
-    public List<CharacterMaster> spectralLemurians;
-
-    public void OnEnable()
-    {
-        ResetLemurians();
-        spectralLemurians = [];
-    }
-
-    public void FixedUpdate()
-    {
-        float currentDamage = CalculateFlatDamageMod();
-        foreach (CharacterMaster lemMaster in spectralLemurians)
-        {
-            CharacterBody lemBody = lemMaster.GetBody();
-            if (!lemBody) continue;
-
-            lemBody.SetBuffCount(SpectralBuff.BuffDef.buffIndex, Math.Max(1, (int)currentDamage + 1));
-        }
-
-        if (spectralLemurians.Count >= PluginConfig.Kebab_Lem_Cap.Value) return;
-
-        MasterSummon masterSummon = new()
-        {
-            masterPrefab = GrilledLizardKebabItem.devotedLemMaster,
-            position = body.transform.position + Vector3.up * 5f,
-            rotation = body.transform.rotation,
-            summonerBodyObject = body.gameObject,
-            useAmbientLevel = true
-        };
-
-        CharacterMaster characterMaster = masterSummon.Perform();
-        if (characterMaster)
-        {
-            CharacterBody lemBody = characterMaster.GetBody();
-            lemBody.AddBuff(RoR2Content.Buffs.HiddenInvincibility);
-            lemBody.AddBuff(RoR2Content.Buffs.Intangible);
-            lemBody.AddBuff(SpectralBuff.BuffDef);
-            lemBody.transform.localScale *= 1.65f;
-
-            if (characterMaster.inventory)
-            {
-                characterMaster.inventory.GiveItemPermanent(RoR2Content.Items.Syringe);
-                characterMaster.inventory.GiveItemPermanent(RoR2Content.Items.Hoof);
-            }
-
-            spectralLemurians.Add(characterMaster);
-        }
-    }
-    private float CalculateFlatDamageMod() => body.damage - body.baseDamage - (body.levelDamage * (body.level - 1));
-    public void OnDisable() => ResetLemurians();
-    private void ResetLemurians()
-    {
-        if (spectralLemurians == null)
-            return;
-
-        foreach (CharacterMaster lem in spectralLemurians)
-            if (lem) lem.TrueKill();
-
-        spectralLemurians.Clear();
-    }
-}
-*/

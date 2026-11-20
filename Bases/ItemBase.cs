@@ -8,7 +8,7 @@ namespace ChefOvercooked;
 public abstract class ItemBase : GenericBase<ItemDef>
 {
     protected virtual bool IsConsumed   => false;
-    protected virtual bool IsRemovable  => false;
+    protected virtual bool IsRemovable  => true;
     protected virtual bool IsHidden     => false;
 
     protected virtual GameObject PickupModelPrefab  => null;
