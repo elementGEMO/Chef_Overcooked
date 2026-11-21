@@ -47,11 +47,5 @@ public class SpecialScepterCookSkill : SkillBase
     protected override int RequiredStock        => 1;
     protected override int StockToConsume       => 1;
 
-    protected override void Initialize()
-    {
-        SkillDef = Value;
-
-        if (ChefOverCookedPlugin.PluginLoaded(AncientScepter.AncientScepterMain.ModGuid))
-            AncientScepter.AncientScepterItem.instance.RegisterScepterSkill(SkillDef, "ChefBody", SkillSlot.Special, 2);
-    }
+    protected override void Initialize() => SkillDef = Value;
 }

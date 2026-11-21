@@ -85,6 +85,7 @@ public class CookState : GenericCharacterMain
 
         if (skillLocator.special.skillDef == SpecialScepterCookSkill.SkillDef)
         {
+            reducedAttackSpeed /= PluginConfig.Attack_Instances_Scepter.Value;
             finalDamageCoeff *= PluginConfig.Damage_Coefficient_Scepter.Value;
             finalRadius *= Mathf.Pow(attackSpeedStat, PluginConfig.Radius_Effectiveness.Value / 100); ;
             finalAttackCount = Mathf.FloorToInt(finalAttackCount * PluginConfig.Attack_Instances_Scepter.Value);

@@ -19,7 +19,7 @@ public class CookDamageType
     public CookDamageType()
     {
         DamageType = DamageAPI.ReserveDamageType();
-        IL.RoR2.ItemDef.AttemptGrant += ItemDef_AttemptGrant;
+
         IL.RoR2.HealthComponent.TakeDamageProcess += HealthComponent_TakeDamageProcess;
         GlobalEventManager.onCharacterDeathGlobal += GlobalEventManager_onCharacterDeathGlobal;
         GlobalEventManager.onServerDamageDealt += GlobalEventManager_onServerDamageDealt;
@@ -27,65 +27,6 @@ public class CookDamageType
         ExecuteAPI.CalculateAdditiveExecuteThresholdForViewer += CookExecuteVisual;
 
         MeatOrb.CreatePrefab();
-    }
-
-    private void ItemDef_AttemptGrant(ILContext il)
-    {
-        ILCursor cursor     = new(il);
-        ILLabel breakState  = null;
-        int pickupDefIndex  = -1;
-        int duplicateIndex  = -1;
-
-        cursor.TryGotoNext(
-            x => x.MatchLdfld(typeof(PickupDef), nameof(PickupDef.itemIndex)),
-            x => x.MatchStloc(out pickupDefIndex)
-        );
-
-        cursor.TryGotoNext(
-            x => x.MatchLdsfld(typeof(DLC3Content.Items), nameof(DLC3Content.Items.Duplicator)),
-            x => x.MatchCallvirt(typeof(Inventory), nameof(Inventory.GetItemCountEffective)),
-            x => x.MatchStloc(out duplicateIndex)
-        );
-
-        if (pickupDefIndex != -1 && duplicateIndex != -1)
-        {
-            if (cursor.TryGotoNext(
-                x => x.MatchLdloc(out _),
-                x => x.MatchLdcI4(0),
-                x => x.MatchCgt(),
-                x => x.MatchLdloc(out _),
-                x => x.MatchAnd(),
-                x => x.MatchBrfalse(out breakState)
-            ) && breakState != null)
-            {
-                cursor.MoveAfterLabels();
-
-                cursor.Emit(OpCodes.Ldarg_0);
-                cursor.Emit(OpCodes.Ldobj, typeof(PickupDef.GrantContext));
-                cursor.Emit(OpCodes.Ldloc, pickupDefIndex);
-                cursor.Emit(OpCodes.Ldloc, duplicateIndex);
-
-                cursor.EmitDelegate<Action<PickupDef.GrantContext, ItemIndex, int>>((context, itemIndex, itemCount) =>
-                {
-                    bool isDuplicated = !context.controller.Duplicated;
-                    CharacterBody pickerBody = context.body;
-
-                    if (itemCount > 0 && isDuplicated)
-                    {
-                        EffectData effectData = new()
-                        {
-                            origin = pickerBody.corePosition,
-                            start = pickerBody.corePosition,
-                            scale = pickerBody.radius
-                        };
-                        EffectManager.SpawnEffect(CharacterBody.CommonAssets.duplicatorPrefab, effectData, true);
-                        pickerBody.inventory.GiveItemTemp(itemIndex, context.controller.pickup.decayValue);
-                    }
-                });
-
-                cursor.Emit(OpCodes.Br, breakState);
-            }
-        }
     }
     private void HealthComponent_TakeDamageProcess(ILContext il)
     {

@@ -105,7 +105,7 @@ public class MealDistributor
             newPickup.pickupIndex = GeneratePickUp(self.rng);
 
             if (self.tempPickups)
-                newPickup.decayValue = PluginConfig.Distribute_Temp_Duration.Value;
+                newPickup.decayValue = 1f;
 
             self.SetPickup(newPickup, newHidden);
         }

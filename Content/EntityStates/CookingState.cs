@@ -172,7 +172,7 @@ public class CookingState : GenericCharacterMain
                 UniquePickup randomPickup = new()
                 {
                     pickupIndex = RandomPickupIndex(),
-                    decayValue = PluginConfig.Temp_Duration.Value
+                    decayValue = 1f
                 };
 
                 PickupDropletController.CreatePickupDroplet(randomPickup, characterBody.corePosition, vectorForce, false, false);
@@ -187,7 +187,7 @@ public class CookingState : GenericCharacterMain
                 PickupDef pickupDef = PickupCatalog.GetPickupDef(RandomPickupIndex());
                 ItemIndex itemIndex = pickupDef.itemIndex;
 
-                characterBody.inventory.GiveItemTemp(itemIndex, PluginConfig.Temp_Duration.Value);
+                characterBody.inventory.GiveItemTemp(itemIndex, 1f);
 
                 Chat.SendBroadcastChat(new Chat.PlayerPickupChatMessage
                 {

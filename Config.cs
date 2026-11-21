@@ -78,6 +78,10 @@ public static class PluginConfig
 
     // // Misc Configs
 
+    // Temporary Meal Rework Configs
+    public static ConfigEntry<bool> Rework_Meals;
+    public static ConfigEntry<float> Meal_Duration;
+
     // Meal Distributor Variant Configs
     public static ConfigEntry<DistributorColor> Distributor_Color;
     public static ConfigEntry<bool> Do_Meal_Weight;
@@ -149,11 +153,6 @@ public static class PluginConfig
         Execute_Leniency = ChefOverCookedPlugin.Instance.Config.Bind(
             token, "Execute Leniency", 1f,
             "[ # Seconds extra to Execute when using this Skill ]"
-        ).PostConfig(MathProcess.Max, 0);
-
-        Temp_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
-            token, "Temp Meal Stack", 0.5f,
-            "[ One Temporary Meal item is worth # compared to one stack ]"
         ).PostConfig(MathProcess.Max, 0);
 
         Attack_Speed_Effectiveness = ChefOverCookedPlugin.Instance.Config.Bind(
@@ -331,6 +330,21 @@ public static class PluginConfig
     }
     private static void MiscInit()
     {
+        string mealReworkToken = "Temporary Meals - Rework";   // Temporary Meal Rework Configs
+
+        Rework_Meals = ChefOverCookedPlugin.Instance.Config.Bind(
+            mealReworkToken, "Meal Rework", true,
+            "[ Should Temporary Meals behave like Risk of Rain Returns ]"
+        ).PostConfig();
+
+        Meal_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
+            mealReworkToken, "Temp Meal Duration", 40f,
+            new ConfigDescription(
+                "[ # in Seconds for how long Temporary Meals should last ]",
+                new AcceptableValueRange<float>(0, 80)
+            )
+        ).PostConfig();
+
         string distributorToken = "Interactable - Meal Distributor";   // Temporary Meal Distributor Configs
 
         Distributor_Color = ChefOverCookedPlugin.Instance.Config.Bind(
@@ -342,11 +356,6 @@ public static class PluginConfig
             distributorToken, "Distribute Weighted", true,
             "[ Makes harder to acquire Meal items rarer in Meal Distributors ]"
         ).PostConfig();
-
-        Distribute_Temp_Duration = ChefOverCookedPlugin.Instance.Config.Bind(
-            distributorToken, "Temp Meal Stack", 1f,
-            "[ One Temporary Meal item is worth # compared to one stack ]"
-        ).PostConfig(MathProcess.Max, 0);
 
         Distributor_Chance = ChefOverCookedPlugin.Instance.Config.Bind(
             distributorToken, "Variant Chance", 50f,

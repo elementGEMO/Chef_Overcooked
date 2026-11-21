@@ -44,23 +44,16 @@ namespace ChefOvercooked
             PluginConfig.Init();
             Log.Init(Logger);
 
-            CheckSoftCompat();
             CreateContent();
             RecipeCatalogChef.Init();
-        }
-
-        private void CheckSoftCompat()
-        {
-            ActiveCompats = [];
-
-            if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey(AncientScepter.AncientScepterMain.ModGuid))
-                ActiveCompats.Add(AncientScepter.AncientScepterMain.ModGuid);
+            LoadAllCompats.Init();
         }
 
         private void CreateContent()
         {
-            new ItemReRender();
             new AllSounds();
+            new MealRework();
+            new ItemReRender();
             new MealDistributor();
 
             CreateItems();
@@ -114,7 +107,5 @@ namespace ChefOvercooked
             Bundle = AssetBundle.LoadFromFile(Path.Combine(Directory.GetParent(Info.Location)!.ToString(), "chefovercooked"));
             StartCoroutine(Bundle.UpgradeStubbedShadersAsync());
         }
-
-        public static bool PluginLoaded(string modGUID) => ActiveCompats.Contains(modGUID);
     }
 }
