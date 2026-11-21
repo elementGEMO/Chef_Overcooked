@@ -24,7 +24,6 @@ public class MealDistributor
         IL.RoR2.PickupDistributorBehavior.Start += PickupDistributorBehavior_Start;
 
         On.RoR2.PickupDistributorBehavior.GenerateNewPickupServer_bool += PickupDistributorBehavior_GenerateNewPickupServer_bool;
-        On.RoR2.PickupDistributorBehavior.Drop += PickupDistributorBehavior_Drop;
         On.RoR2.PickupDistributorBehavior.RerollPickup += PickupDistributorBehavior_RerollPickup;
     }
 
@@ -85,11 +84,8 @@ public class MealDistributor
 
             cursor.EmitDelegate<Action<PickupDistributorBehavior>>(self =>
             {
-                if (self.rng.RangeFloat(0f, 1f) < PluginConfig.Distributor_Chance.Value / 100)
-                {
+                if (self.rng.RangeFloat(0f, 1f) < PluginConfig.Distributor_Chance.Value / 100f)
                     self.gameObject.AddComponent<MealDistributorVariant>();
-                    self.baseDropAmount = 3;
-                }
             });
         }
         else Log.Error("MEALDISTRIBUTOR_START failed to ILHook");
@@ -110,16 +106,6 @@ public class MealDistributor
             self.SetPickup(newPickup, newHidden);
         }
         else orig(self, newHidden);
-    }
-    private void PickupDistributorBehavior_Drop(On.RoR2.PickupDistributorBehavior.orig_Drop orig, PickupDistributorBehavior self)
-    {
-        if (self.gameObject.GetComponent<MealDistributorVariant>()) // Jank to make the gap between items actually disappear as it plays the anim
-        {
-            if (self.itemsDropped == 1 || self.itemsDropped == 3)
-                self.itemsDropped++;
-        }
-
-        orig(self);
     }
 
     public class MealDistributorVariant : NetworkBehaviour
@@ -168,9 +154,6 @@ public class MealDistributor
 
             if (render)
                 render.material = MealMaterial;
-
-            baseTransform.Find("PickupDisplay (2)").gameObject.SetActive(false);
-            baseTransform.Find("PickupDisplay (4)").gameObject.SetActive(false);
         }
     }
 }
