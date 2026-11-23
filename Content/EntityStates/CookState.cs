@@ -23,6 +23,8 @@ public class CookState : GenericCharacterMain
     private float finalDamageCoeff;
     private float finalRadius;
     private int finalAttackCount;
+
+    private bool isScepter;
     
     public static void CreateEffects()
     {
@@ -83,9 +85,10 @@ public class CookState : GenericCharacterMain
         finalRadius         = PluginConfig.Radius.Value;
         finalAttackCount    = PluginConfig.Attack_Instances.Value;
 
-        if (skillLocator.special.skillDef == SpecialScepterCookSkill.SkillDef)
+        isScepter = skillLocator.special.skillDef == SpecialScepterCookSkill.SkillDef;
+        if (isScepter)
         {
-            reducedAttackSpeed /= PluginConfig.Attack_Instances_Scepter.Value;
+            reducedAttackSpeed /= PluginConfig.Attack_Instances_Scepter.Value / 1.5f;
             finalDamageCoeff *= PluginConfig.Damage_Coefficient_Scepter.Value;
             finalRadius *= Mathf.Pow(attackSpeedStat, PluginConfig.Radius_Effectiveness.Value / 100); ;
             finalAttackCount = Mathf.FloorToInt(finalAttackCount * PluginConfig.Attack_Instances_Scepter.Value);
@@ -113,7 +116,7 @@ public class CookState : GenericCharacterMain
         SlashEffectSpawn();
 
         if (NetworkServer.active)
-            characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 0.1f / reducedAttackSpeed);
+            characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 0.1f / reducedAttackSpeed * (isScepter ? PluginConfig.Attack_Instances_Scepter.Value / 1.5f : 1));
 
         setDuration -= GetDeltaTime();
         if (setDuration <= 0)
@@ -127,7 +130,7 @@ public class CookState : GenericCharacterMain
         if (attackCount > finalAttackCount && isAuthority)
         {
             if (characterBody.inventory && characterBody.inventory.GetItemCountEffective(MonsterMeatItem.ItemDef) > 0 && NetworkServer.active)
-                characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 2f / reducedAttackSpeed);
+                characterBody.AddTimedBuff(MeatTimerBuff.BuffDef, 2f / reducedAttackSpeed * (isScepter ? PluginConfig.Attack_Instances_Scepter.Value / 1.5f : 1));
 
             outer.SetNextStateToMain();
         }

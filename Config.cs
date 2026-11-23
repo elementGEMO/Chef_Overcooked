@@ -33,6 +33,12 @@ public static class PluginConfig
     public static ConfigEntry<float> Attack_Instances_Scepter;
     public static ConfigEntry<float> Damage_Coefficient_Scepter;
 
+    // Roll Utility Configs
+    public static ConfigEntry<bool> Do_Roll_Rework;
+
+    // Glaze Special Configs
+    public static ConfigEntry<bool> Do_Glaze_Rework;
+
     // // Item Configs
 
     // Primitive Claws
@@ -113,6 +119,7 @@ public static class PluginConfig
     }
     private static void SkillInit()
     {
+        // Cook Skill Configs
         string token = "Chef Special - Cook";
 
         FoodDrops = ChefOverCookedPlugin.Instance.Config.Bind(
@@ -160,8 +167,7 @@ public static class PluginConfig
             "[ #% approximate effectiveness for the Attack Speed on this Skill ]"
         ).PostConfig(MathProcess.Max, 0);
 
-        // Scepter
-
+        // Scepter Cook Configs
         Attack_Instances_Scepter = ChefOverCookedPlugin.Instance.Config.Bind(
             token + " - Scepter", "Attack Count Multiplier", 2f,
             "[ #x the Amount of Times this Skill will deal damage ]"
@@ -176,6 +182,20 @@ public static class PluginConfig
             token + " - Scepter", "Attack Speed to Radius", 75f,
             "[ #% approximate effectiveness for the Attack Speed to Radius scaling on this Skill ]"
         ).PostConfig(MathProcess.Max, 0);
+
+        // Other Skill Tweaks Configs
+        string skillReworkToken = "Chef Skills - Reworks";
+
+        Do_Roll_Rework = ChefOverCookedPlugin.Instance.Config.Bind(
+            skillReworkToken, "Enable Roll Rework", true,
+            "[ Should Roll apply Oil / Boosted Roll leave an Oil trail instead of inflicting Bleed ]"
+        ).PostConfig();
+
+        Do_Glaze_Rework = ChefOverCookedPlugin.Instance.Config.Bind(
+            skillReworkToken, "Enable Glaze Rework", true,
+            "[ Should Glaze spew Ignited / Frozen Oil ]"
+        ).PostConfig();
+
     }
     private static void ItemInit()
     {

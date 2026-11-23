@@ -66,6 +66,8 @@ namespace ChefOvercooked
             new CookDamageType();
             new SpecialCookSkill();
             new SpecialScepterCookSkill();  // Scepter Upgrade for Cook
+
+            new ChefRework();
         }
 
         private void CreateItems()
